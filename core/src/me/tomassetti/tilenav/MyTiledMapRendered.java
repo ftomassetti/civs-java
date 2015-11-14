@@ -7,16 +7,11 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTile;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer;
-import com.badlogic.gdx.maps.tiled.renderers.IsometricTiledMapRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
-import java.util.Iterator;
-
 import static com.badlogic.gdx.graphics.g2d.Batch.*;
-import static com.badlogic.gdx.graphics.g2d.Batch.U2;
-import static com.badlogic.gdx.graphics.g2d.Batch.U3;
 
 public class MyTiledMapRendered extends BatchTiledMapRenderer {
 
@@ -71,15 +66,34 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
     }
 
     private float getOffsetY(TiledMapTileLayer layer) {
-        if (layer.getName().endsWith("hill")) {
-            return -32.0f;
-        } else if (layer.getName().endsWith("low_mountain")) {
-            return -64.0f;
-        } else if (layer.getName().endsWith("med_mountain")) {
-            return -96.0f * 3;
-        } else if (layer.getName().endsWith("high_mountain")) {
-            return -128.0f * 4;
+        if (layer.getName().replaceAll("_", " ").contains("high mountain")) {
+            if (layer.getName().contains("half")) {
+                return -48.0f * 7;
+            } else {
+                return -48.0f * 8;
+            }
+        } else if (layer.getName().replaceAll("_", " ").contains("low mountain")) {
+            if (layer.getName().contains("half")) {
+                return -48.0f * 5;
+            } else {
+                return -48.0f * 6;
+            }
+        } else if (layer.getName().replaceAll("_", " ").contains("med mountain")) {
+            if (layer.getName().contains("half")) {
+                return -48.0f * 3;
+            } else {
+                return -48.0f * 4;
+            }
+        } else if (layer.getName().replaceAll("_", " ").contains("hill")) {
+            if (layer.getName().contains("half")) {
+                return -48.0f * 1;
+            } else {
+                return -48.0f * 2;
+            }
         } else {
+            if (!layer.getName().contains("ground")) {
+                throw new RuntimeException(layer.getName());
+            }
             return 0.0f;
         }
     }

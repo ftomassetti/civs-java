@@ -2,32 +2,88 @@ package me.tomassetti.tilenav;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
-import com.badlogic.gdx.maps.tiled.renderers.IsometricTiledMapRenderer;
-import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.maps.tiled.*;
+import javafx.geometry.Pos;
+import org.worldengine.world.World;
+import org.worldengine.world.WorldPackage;
+
+import java.io.File;
+import java.util.*;
+
 
 public class TileNavApp extends ApplicationAdapter implements InputProcessor {
-    Texture img;
+
+    private final static int N_INITIAL_TRIBES = 5000;
+
     TiledMap tiledMap;
     OrthographicCamera camera;
     TiledMapRenderer tiledMapRenderer;
     long mapWidthInPixels;
     long mapHeightInPixels;
+    List<Band> bands = new ArrayList<>();
+    TiledMapTileLayer groundLayer;
+    TiledMapTile tentTile;
+    TiledMapTile emptyTile;
+    WorldSize worldSize;
+    World world;
+
+    List<TiledMapTileLayer> decorationLayers = new ArrayList<>();
+    List<TiledMapTileLayer> terrainLayers = new ArrayList<>();
+    Map<Position, TiledMapTile> originalTiles = new HashMap<>();
+
+    private TiledMapTileLayer getDecorationLayer(int x, int y) {
+        for (int i=0; i<terrainLayers.size();i++){
+            TiledMapTileLayer.Cell cell = terrainLayers.get(i).getCell(x, y);
+            if (cell != null) {
+                return decorationLayers.get(i);
+            }
+        }
+        throw new UnsupportedOperationException("No layers found at "+x+", " + y);
+    }
+
+    private Position getRandomLand(Random random, Set<Position> positionsOccupied) {
+        int x = random.nextInt(world.getWidth());
+        int y = random.nextInt(world.getHeight());
+        if (world.getBiome().get(world.getHeight() - 1 - y).get(x).toLowerCase().equals("ocean")) {
+            return getRandomLand(random, positionsOccupied);
+        } else {
+            Position p = new Position(x * 3 + 1, y * 3 + 1, worldSize);
+            if (positionsOccupied.contains(p)) {
+                return getRandomLand(random, positionsOccupied);
+            } else {
+                positionsOccupied.add(p);
+                return p;
+            }
+        }
+    }
+
+    private void preserving(Position position) {
+        TiledMapTileLayer layer = getDecorationLayer(position.getX(), position.getY());
+        TiledMapTileLayer.Cell prevCell = layer.getCell(position.getX(), position.getY());
+        TiledMapTile prevTile = prevCell == null ? emptyTile : prevCell.getTile();
+        if (!originalTiles.containsKey(position)) {
+            originalTiles.put(position, prevTile);
+        }
+    }
+
+    private void settingTent(Position position) {
+        preserving(position);
+        TiledMapTileLayer.Cell tentCell = new TiledMapTileLayer.Cell();
+        tentCell.setTile(tentTile);
+        TiledMapTileLayer layer = getDecorationLayer(position.getX(), position.getY());
+        layer.setCell(position.getX(), position.getY(), tentCell);
+    }
+
+    private void restore(Position position) {
+        TiledMapTileLayer oldLayer = getDecorationLayer(position.getX(), position.getY());
+        TiledMapTileLayer.Cell restoredCell = new TiledMapTileLayer.Cell();
+        restoredCell.setTile(originalTiles.get(position));
+        oldLayer.setCell(position.getX(), position.getY(), restoredCell);
+    }
 
     @Override
     public void create() {
@@ -38,14 +94,74 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         camera.setToOrtho(false, w, h);
         camera.position.set(w / 2f, h / 2f, 0);
         camera.update();
-        //tiledMap = new TmxMapLoader().load("tiled_seed_54925.tmx");
         tiledMap = new TmxMapLoader().load("tiled_seed_888_comp.tmx");
+        world = WorldPackage.loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_888.world"));
+
+        groundLayer = (TiledMapTileLayer) tiledMap.getLayers().get("decoration ground");
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration high mountain"));
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration half high mountain"));
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration med mountain"));
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration half med mountain"));
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration low mountain"));
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration half low mountain"));
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration hill"));
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration half hill"));
+        decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration ground"));
+
+        for (int i=0; i<decorationLayers.size(); i++) {
+            if (decorationLayers.get(i) == null) {
+                throw new RuntimeException("LVL " + i);
+            }
+        }
+
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("high_mountain"));
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("high_mountain half"));
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("med_mountain"));
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("med_mountain half"));
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("low_mountain"));
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("low_mountain half"));
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("hill"));
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("hill half"));
+        terrainLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("ground"));
+
+        for (int i=0; i<terrainLayers.size(); i++) {
+            if (terrainLayers.get(i) == null) {
+                throw new RuntimeException("LVL " + i);
+            }
+        }
+
+        tentTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(106);
+        emptyTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(116);
+
+        Random random = new Random();
+        worldSize = new WorldSize(groundLayer.getWidth(), groundLayer.getHeight());
+        Set<Position> positionsOccupied = new HashSet<>();
+        for (int i=0;i<N_INITIAL_TRIBES;i++) {
+            Position initialPosition = getRandomLand(random, positionsOccupied);
+            settingTent(initialPosition);
+        }
+
         tiledMapRenderer = new MyTiledMapRendered(tiledMap);
         Gdx.input.setInputProcessor(this);
 
-        TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get(0);
-        mapWidthInPixels = (long)(layer.getTileWidth() * (Integer)tiledMap.getProperties().get("width"));
-        mapHeightInPixels = (long)(layer.getTileHeight() * (Integer)tiledMap.getProperties().get("height"));
+
+        mapWidthInPixels = (long)(groundLayer.getTileWidth() * (Integer)tiledMap.getProperties().get("width"));
+        mapHeightInPixels = (long)(groundLayer.getTileHeight() * (Integer)tiledMap.getProperties().get("height"));
+
+        TimerTask updateTask = new TimerTask() {
+            @Override
+            public void run() {
+                for (Band band : bands) {
+                    restore(band.getPosition());
+
+                    band.move(1, 1);
+
+                    Position newPos = band.getPosition();
+                    settingTent(newPos);
+                }
+            }
+        };
+        new Timer().scheduleAtFixedRate(updateTask, 5000, 1000);
     }
 
     @Override
@@ -65,13 +181,18 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
 
     @Override
     public boolean keyUp(int keycode) {
-        int movInc = (int)(32.0f * camera.zoom);
+        final float MOVEMENT_INC = 32.0f;
+        final float ZOOM_INC = 2.0f;
+        final float MIN_ZOOM = 0.5f;
+        final float MAX_ZOOM = 512.0f;
+
+        int movInc = (int)(MOVEMENT_INC * camera.zoom);
 
         if (keycode == Input.Keys.A) {
-            camera.zoom *= 2.0f;
+            camera.zoom *= ZOOM_INC;
         }
         if (keycode == Input.Keys.Q) {
-            camera.zoom /= 2.0f;
+            camera.zoom /= ZOOM_INC;
         }
         if (keycode == Input.Keys.LEFT) {
             camera.translate(-movInc, 0);
@@ -86,27 +207,14 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
             camera.translate(0, -movInc);
         }
 
-        camera.zoom = Math.max(camera.zoom, 0.25f);
-        camera.zoom = Math.min(camera.zoom, 32.0f);
-
-        float effectiveViewportWidth = camera.viewportWidth * camera.zoom;
-        float effectiveViewportHeight = camera.viewportHeight * camera.zoom;
-
-        //camera.position.x = Math.max(effectiveViewportWidth/2.0f, camera.position.x);
-        //camera.position.y = Math.max(effectiveViewportHeight/2.0f, camera.position.y);
-        //camera.position.x = Math.min(mapWidthInPixels - effectiveViewportWidth / 2.0f, camera.position.x);
-        //camera.position.y = Math.min(mapHeightInPixels - effectiveViewportHeight / 2.0f, camera.position.y);
-
-        System.out.println("=== UPDATE ===");
-        System.out.println("Position " + camera.position.x + ", "+camera.position.y);
-        System.out.println("Effective viewport " + effectiveViewportWidth + " x " + effectiveViewportHeight);
+        camera.zoom = Math.max(camera.zoom, MIN_ZOOM);
+        camera.zoom = Math.min(camera.zoom, MAX_ZOOM);
 
         return false;
     }
 
     @Override
     public boolean keyTyped(char character) {
-
         return false;
     }
 
