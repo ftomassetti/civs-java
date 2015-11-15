@@ -2,16 +2,9 @@ package me.tomassetti.tilenav
 
 import com.badlogic.gdx.maps.tiled.TiledMapTile
 
-public data class WorldSize(width: Int, height: Int) {
-    val width: Int = width
-    val height: Int = height
-}
+public data class WorldSize(val width: Int, val height: Int)
 
-public data class Position(x: Int, y:Int, worldSize:WorldSize) {
-    val x = x
-    val y = y
-    val worldSize = worldSize
-}
+public data class Position(val x: Int, val y:Int, val worldSize:WorldSize)
 
 fun move(p: Position, dx: Int, dy: Int) : Position {
     var nx = (p.x + dx)

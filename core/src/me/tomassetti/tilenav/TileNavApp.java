@@ -17,7 +17,7 @@ import java.util.*;
 
 public class TileNavApp extends ApplicationAdapter implements InputProcessor {
 
-    private final static int N_INITIAL_TRIBES = 5000;
+    private final static int N_INITIAL_TRIBES = 100;
 
     TiledMap tiledMap;
     OrthographicCamera camera;
@@ -133,12 +133,18 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         tentTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(106);
         emptyTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(116);
 
-        Random random = new Random();
+        Random random = new Random(1);
         worldSize = new WorldSize(groundLayer.getWidth(), groundLayer.getHeight());
+
+        Position p1 = new Position(7, 18, worldSize);
+        Position p2 = new Position(7, 18, worldSize);
+
+
         Set<Position> positionsOccupied = new HashSet<>();
         for (int i=0;i<N_INITIAL_TRIBES;i++) {
             Position initialPosition = getRandomLand(random, positionsOccupied);
             settingTent(initialPosition);
+            bands.add(new Band(initialPosition));
         }
 
         tiledMapRenderer = new MyTiledMapRendered(tiledMap);
