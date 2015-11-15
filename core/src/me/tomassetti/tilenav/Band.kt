@@ -24,8 +24,7 @@ fun move(p: Position, dx: Int, dy: Int) : Position {
     return Position(nx, ny, p.worldSize)
 }
 
-public data class Band(position:Position) {
-    var position = position
+public data class Band(var position:Position, val name:String) {
 
     fun move(dx: Int, dy: Int) {
         position = move(position, dx, dy)

@@ -7,7 +7,6 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.*;
-import javafx.geometry.Pos;
 import org.worldengine.world.World;
 import org.worldengine.world.WorldPackage;
 
@@ -17,7 +16,7 @@ import java.util.*;
 
 public class TileNavApp extends ApplicationAdapter implements InputProcessor {
 
-    private final static int N_INITIAL_TRIBES = 100;
+    private final static int N_INITIAL_TRIBES = 5;
 
     TiledMap tiledMap;
     OrthographicCamera camera;
@@ -94,8 +93,10 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         camera.setToOrtho(false, w, h);
         camera.position.set(w / 2f, h / 2f, 0);
         camera.update();
-        tiledMap = new TmxMapLoader().load("tiled_seed_888_comp.tmx");
-        world = WorldPackage.loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_888.world"));
+        //tiledMap = new TmxMapLoader().load("tiled_seed_888_comp.tmx");
+        //world = WorldPackage.loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_888.world"));
+        tiledMap = new TmxMapLoader().load("tiled_seed_124.tmx");
+        world = WorldPackage.loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_124.world"));
 
         groundLayer = (TiledMapTileLayer) tiledMap.getLayers().get("decoration ground");
         decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration high mountain"));
@@ -144,10 +145,15 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         for (int i=0;i<N_INITIAL_TRIBES;i++) {
             Position initialPosition = getRandomLand(random, positionsOccupied);
             settingTent(initialPosition);
-            bands.add(new Band(initialPosition));
+            bands.add(new Band(initialPosition, "Foo" + i));
         }
 
-        tiledMapRenderer = new MyTiledMapRendered(tiledMap);
+        tiledMapRenderer = new MyTiledMapRendered(tiledMap, bands, new LayerFinder() {
+            @Override
+            public TiledMapTileLayer decorationLayer(int x, int y) {
+                return getDecorationLayer(x, y);
+            }
+        });
         Gdx.input.setInputProcessor(this);
 
 

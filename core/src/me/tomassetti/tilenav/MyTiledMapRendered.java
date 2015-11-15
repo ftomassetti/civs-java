@@ -1,15 +1,23 @@
 package me.tomassetti.tilenav;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapImageLayer;
 import com.badlogic.gdx.maps.tiled.TiledMapTile;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.badlogic.gdx.graphics.g2d.Batch.*;
 
@@ -24,24 +32,15 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
     private Vector2 topLeft = new Vector2();
     private Vector2 bottomRight = new Vector2();
 
-    public MyTiledMapRendered (TiledMap map) {
+    private BitmapFont font;
+    private List<Band> bands;
+    private LayerFinder layerFinder;
+
+    public MyTiledMapRendered(TiledMap map, List<Band> bands, LayerFinder layerFinder) {
         super(map);
         init();
-    }
-
-    public MyTiledMapRendered (TiledMap map, Batch batch) {
-        super(map, batch);
-        init();
-    }
-
-    public MyTiledMapRendered (TiledMap map, float unitScale) {
-        super(map, unitScale);
-        init();
-    }
-
-    public MyTiledMapRendered (TiledMap map, float unitScale, Batch batch) {
-        super(map, unitScale, batch);
-        init();
+        this.bands = bands;
+        this.layerFinder = layerFinder;
     }
 
     private void init () {
@@ -56,6 +55,10 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         // ... and the inverse matrix
         invIsotransform = new Matrix4(isoTransform);
         invIsotransform.inv();
+
+        font = new BitmapFont();
+        font.setColor(Color.BLACK);
+        font.getData().setScale(3.0f, 3.0f);
     }
 
     private Vector3 translateScreenToIso (Vector2 vec) {
@@ -99,7 +102,7 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
     }
 
     @Override
-    public void renderTileLayer (TiledMapTileLayer layer) {
+    public void renderTileLayer(TiledMapTileLayer layer) {
         final Color batchColor = batch.getColor();
         final float color = Color.toFloatBits(batchColor.r, batchColor.g, batchColor.b, batchColor.a * layer.getOpacity());
 
@@ -244,5 +247,58 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
                 }
             }
         }
+    }
+
+    @Override
+    public void render () {
+        beginRender();
+        Map<MapLayer, List<Band>> bandsByLayer = divideBandsByLayer();
+        for (MapLayer layer : map.getLayers()) {
+            if (layer.isVisible()) {
+                if (layer instanceof TiledMapTileLayer) {
+                    renderTileLayer((TiledMapTileLayer)layer);
+                    renderLabels(bandsByLayer.get(layer), (TiledMapTileLayer)layer);
+                } if (layer instanceof TiledMapImageLayer) {
+                    renderImageLayer((TiledMapImageLayer)layer);
+                } else {
+                    renderObjects(layer);
+                }
+            }
+        }
+        endRender();
+    }
+
+    private void renderLabels(List<Band> bands, TiledMapTileLayer layer) {
+        if (bands == null) {
+            return;
+        }
+        float tileWidth = layer.getTileWidth() * unitScale;
+        float tileHeight = layer.getTileHeight() * unitScale;
+        float halfTileWidth = tileWidth * 0.5f;
+        float halfTileHeight = tileHeight * 0.5f;
+        float layerOffsetY = getOffsetY(layer);
+        for (Band band : bands) {
+            drawText(halfTileWidth, halfTileHeight, layerOffsetY, band.getPosition().getX(), band.getPosition().getY(), band.getName());
+        }
+    }
+
+    private Map<MapLayer, List<Band>> divideBandsByLayer() {
+        Map<MapLayer, List<Band>> bandsByLayer = new HashMap<>();
+        for (Band band : bands) {
+            MapLayer layer = layerFinder.decorationLayer(band.getPosition().getX(), band.getPosition().getY());
+            if (!bandsByLayer.containsKey(layer)) {
+                bandsByLayer.put(layer, new ArrayList<>());
+            }
+            bandsByLayer.get(layer).add(band);
+        }
+        return bandsByLayer;
+    }
+
+    private void drawText(float halfTileWidth, float halfTileHeight, float layerOffsetY, int textCol, int textRow, String text) {
+        GlyphLayout layout = new GlyphLayout(font, text);
+        float textX = halfTileWidth + (textCol * halfTileWidth) + (textRow * halfTileWidth)  - layout.width / 2;
+        float textY = (halfTileHeight*3) + (textRow * halfTileHeight) - (textCol * halfTileHeight)  - layerOffsetY;
+
+        font.draw(batch, text, textX, textY);
     }
 }
