@@ -279,7 +279,9 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         float halfTileHeight = tileHeight * 0.5f;
         float layerOffsetY = getOffsetY(layer);
         for (Band band : bands) {
-            drawText(halfTileWidth, halfTileHeight, layerOffsetY, band.getPosition().getX(), band.getPosition().getY(), band.getName());
+            drawText(halfTileWidth, halfTileHeight, layerOffsetY,
+                    band.getPosition().getX(), band.getPosition().getY(),
+                    band.getName() + " (" + band.getPopulation().total() + ")");
         }
     }
 

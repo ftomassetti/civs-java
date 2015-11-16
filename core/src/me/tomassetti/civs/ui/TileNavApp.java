@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import static me.tomassetti.civs.logic.LogicPackage.*;
 
 
 public class TileNavApp extends ApplicationAdapter implements InputProcessor {
@@ -34,7 +35,6 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
     TiledMapTileLayer groundLayer;
     TiledMapTile tentTile;
     TiledMapTile emptyTile;
-    WorldSize worldSize;
     World world;
 
     List<TiledMapTileLayer> decorationLayers = new ArrayList<>();
@@ -49,22 +49,6 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
             }
         }
         throw new UnsupportedOperationException("No layers found at "+x+", " + y);
-    }
-
-    private Position getRandomLand(Random random, Set<Position> positionsOccupied) {
-        int x = random.nextInt(world.getWidth());
-        int y = random.nextInt(world.getHeight());
-        if (world.getBiome().get(world.getHeight() - 1 - y).get(x).toLowerCase().equals("ocean")) {
-            return getRandomLand(random, positionsOccupied);
-        } else {
-            Position p = new Position(x * 3 + 1, y * 3 + 1, worldSize);
-            if (positionsOccupied.contains(p)) {
-                return getRandomLand(random, positionsOccupied);
-            } else {
-                positionsOccupied.add(p);
-                return p;
-            }
-        }
     }
 
     private void preserving(Position position) {
@@ -89,20 +73,6 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         TiledMapTileLayer.Cell restoredCell = new TiledMapTileLayer.Cell();
         restoredCell.setTile(originalTiles.get(position));
         oldLayer.setCell(position.getX(), position.getY(), restoredCell);
-    }
-
-    private NameGenerator getNameGenerator() {
-        File file = new File("/home/federico/repos/namegen-data/personnames/Italian_male.txt");
-        try {
-            List<String> samples = new ArrayList<>();
-            try( BufferedReader reader = new BufferedReader( new FileReader(file)) ) {
-                reader.lines().map(line -> line.trim()).filter(line -> !line.isEmpty()).forEach(line -> samples.add(line));
-            }
-            NameGenerator nameGenerator = new NameGenerator(samples.toArray(new String[]{}));
-            return nameGenerator;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -155,22 +125,8 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         tentTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(106);
         emptyTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(116);
 
-        Random random = new Random(1);
-        worldSize = new WorldSize(groundLayer.getWidth(), groundLayer.getHeight());
-
-        Position p1 = new Position(7, 18, worldSize);
-        Position p2 = new Position(7, 18, worldSize);
-
-
-        NameGenerator nameGenerator = getNameGenerator();
-        Set<Position> positionsOccupied = new HashSet<>();
-        for (int i=0;i<N_INITIAL_TRIBES;i++) {
-            Position initialPosition = getRandomLand(random, positionsOccupied);
-            settingTent(initialPosition);
-            String name = nameGenerator.generateName();
-            name = name.substring(0, 1).toUpperCase() + name.substring(1);
-            bands.add(new Band(initialPosition, name));
-        }
+        bands = createBands(world, N_INITIAL_TRIBES);
+        bands.forEach(b -> settingTent(b.getPosition()));
 
         tiledMapRenderer = new MyTiledMapRendered(tiledMap, bands, new LayerFinder() {
             @Override
@@ -184,13 +140,16 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         mapWidthInPixels = (long)(groundLayer.getTileWidth() * (Integer)tiledMap.getProperties().get("width"));
         mapHeightInPixels = (long)(groundLayer.getTileHeight() * (Integer)tiledMap.getProperties().get("height"));
 
+        Random random = new Random(1);
+
         TimerTask updateTask = new TimerTask() {
             @Override
             public void run() {
                 for (Band band : bands) {
                     restore(band.getPosition());
 
-                    band.move(1, 1);
+                    updatePopulation(band, world, random);
+                    band.setPosition(determineNewPosition(band, world, random));
 
                     Position newPos = band.getPosition();
                     settingTent(newPos);
