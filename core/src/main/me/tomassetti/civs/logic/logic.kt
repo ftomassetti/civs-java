@@ -14,20 +14,20 @@ import org.worldengine.world.World
 fun namesGenerator() : NameGenerator {
     val file = File("/home/federico/repos/namegen-data/personnames/Italian_male.txt")
     val samples = ArrayList<String>()
-    BufferedReader(FileReader(file)).use { reader ->
-        reader.lines()
-                .map<String> { line -> line.trim() }
-                .filter { line -> !line.isEmpty() }
-                .forEach { line -> samples.add(line) }
-    }
-    val nameGenerator = NameGenerator(samples.toArray<String>(array<String>()))
+
+    val reader = BufferedReader(FileReader(file))
+    reader.lines()
+            .map { line -> java.lang.String(line).trim() } //{ line -> java.lang.String(line.trim()).toString() }
+            .filter { line -> !java.lang.String(line).isEmpty() }
+            .forEach { line -> samples.add(line) }
+    val nameGenerator = NameGenerator(samples)
     return nameGenerator
 }
 
 fun getRandomLand(world: World, random: Random, positionsOccupied: MutableSet<Position>): Position {
     val x = random.nextInt(world.width)
     val y = random.nextInt(world.height)
-    if (world.biome.get(world.height - 1 - y).get(x).toLowerCase() == "ocean") {
+    if (java.lang.String(world.biome.get(world.height - 1 - y).get(x)).toLowerCase() == "ocean") {
         return getRandomLand(world, random, positionsOccupied)
     } else {
         val worldSize = WorldSize(world.width * 3, world.height * 3)
@@ -41,22 +41,23 @@ fun getRandomLand(world: World, random: Random, positionsOccupied: MutableSet<Po
     }
 }
 
-fun createBands(world: World, nbands:Int) : List<Band> {
+public fun createBands(world: World, nbands:Int) : List<Band> {
     val nameGenerator = namesGenerator()
     val positionsOccupied = HashSet<Position>()
     val random = Random(1)
     val bands = ArrayList<Band>()
     for (id in 1..nbands) {
         val initialPosition = getRandomLand(world, random, positionsOccupied)
-        var name = nameGenerator.generateName()
-        name = name.substring(0, 1).toUpperCase() + name.substring(1)
+        var name = java.lang.String(nameGenerator.generateName())
+        name = java.lang.String(java.lang.String(name.substring(0, 1)).toUpperCase() + name.substring(1))
         val initialPopulation = Population(5, 5, 8, 8, 2, 2)
-        bands.add(Band(id, name, initialPosition, initialPopulation))
+        val nameK : String = "" + name
+        bands.add(Band(id, nameK, initialPosition, initialPopulation))
     }
     return bands
 }
 
-trait Biome {
+interface  Biome {
     fun name() : String
 }
 
@@ -216,21 +217,53 @@ object warmTemperateWetForest : Biome {
 }
 
 fun isLand(position: Position, world: World) : Boolean {
-    return !world.biome.get(world.height - 1 - position.y/3).get(position.x/3).toLowerCase().equals("ocean")
+    val biomeName : java.lang.String = java.lang.String(world.biome.get(world.height - 1 - position.y/3).get(position.x/3))
+    return !biomeName.toLowerCase().equals("ocean")
 }
 
 fun biomeAt(position: Position, world: World) : Biome {
     val biomeName = world.biome.get(world.height - 1 - position.y/3).get(position.x/3)
-    val allBiomes = array(ocean, ice, polarDesert,
-            subpolarDryTundra, subpolarMoistTundra, subpolarRainTundra, subpolarWetTundra,
-            borealDesert, borealDryScrub, borealMoistForest, borealRainForest, borealWetForest,
-            coolTemperateDesert, coolTemperateDesertScrub, coolTemperateMoistForest, coolTemperateRainForest, coolTemperateSteppe, coolTemperateWetForest,
-            subtropicalDesert, subtropicalDesertScrub, subtropicalDryForest, subtropicalMoistForest,
-            subtropicalRainForest, subtropicalThornWoodland, subtropicalWetForest,
-            tropicalDesert, tropicalDesertScrub, tropicalDryForest, tropicalMoistForest,
-            tropicalRainForest, tropicalThornWoodland, tropicalVeryDryForest, tropicalWetForest,
-            warmTemperateDesert, warmTemperateDesertScrub, warmTemperateDryForest, warmTemperateMoistForest,
-            warmTemperateRainForest, warmTemperateThornScrub, warmTemperateWetForest)
+    val allBiomes = ArrayList<Biome>()
+    allBiomes.add(ice)
+    allBiomes.add(polarDesert)
+    allBiomes.add(subpolarDryTundra)
+    allBiomes.add(subpolarMoistTundra)
+    allBiomes.add(subpolarRainTundra)
+    allBiomes.add(subpolarWetTundra)
+    allBiomes.add(borealDesert)
+    allBiomes.add(borealDryScrub)
+    allBiomes.add(borealMoistForest)
+    allBiomes.add(borealRainForest)
+    allBiomes.add(borealWetForest)
+    allBiomes.add(coolTemperateDesert)
+    allBiomes.add(coolTemperateDesertScrub)
+    allBiomes.add(coolTemperateMoistForest)
+    allBiomes.add(coolTemperateRainForest)
+    allBiomes.add(coolTemperateSteppe)
+    allBiomes.add(coolTemperateWetForest)
+    allBiomes.add(subtropicalDesert)
+    allBiomes.add(subtropicalDesertScrub)
+    allBiomes.add(subtropicalDryForest)
+    allBiomes.add(subtropicalMoistForest)
+    allBiomes.add(subtropicalRainForest)
+    allBiomes.add(subtropicalThornWoodland)
+    allBiomes.add(subtropicalWetForest)
+    allBiomes.add(tropicalDesert)
+    allBiomes.add(tropicalDesertScrub)
+    allBiomes.add(tropicalDryForest)
+    allBiomes.add(tropicalMoistForest)
+    allBiomes.add(tropicalRainForest)
+    allBiomes.add(tropicalThornWoodland)
+    allBiomes.add(tropicalVeryDryForest)
+    allBiomes.add(tropicalWetForest)
+    allBiomes.add(warmTemperateDesert)
+    allBiomes.add(warmTemperateDesertScrub)
+    allBiomes.add(warmTemperateDryForest)
+    allBiomes.add(warmTemperateMoistForest)
+    allBiomes.add(warmTemperateRainForest)
+    allBiomes.add(warmTemperateThornScrub)
+    allBiomes.add(warmTemperateWetForest)
+
     for (biome in allBiomes) {
         if (biome.name().equals(biomeName)) {
             return biome
@@ -239,9 +272,15 @@ fun biomeAt(position: Position, world: World) : Biome {
     throw RuntimeException(biomeName)
 }
 
-fun determineNewPosition(band: Band, world: World, random: Random) : Position {
-    val positions = band.position.around(true).filter { p -> isLand(p, world) }
-    return positions.get(random.nextInt(positions.size()))
+public fun determineNewPosition(band: Band, world: World, random: Random) : Position {
+    val positions = band.position.around(true)
+    val cleanPositions = ArrayList<Position>()
+    for (p in positions) {
+        if (isLand(p, world)) {
+            cleanPositions.add(p)
+        }
+    }
+    return cleanPositions.get(random.nextInt(cleanPositions.size))
 }
 
 fun adultMaleFactor(population: Population) : Float {
@@ -253,13 +292,19 @@ fun adultMaleFactor(population: Population) : Float {
     }
 }
 
-fun updatePopulation(band: Band, world: World, random: Random) {
+public fun updatePopulation(band: Band, world: World, random: Random) {
     var prosperity = huntingAndGathering.prosperity(biomeAt(band.position, world))
-    prosperity *= (random.nextFloat() - 0.5f)/10.0f
+    prosperity *= (random.nextFloat() - 0.5f) / 10.0f
+    band.population = calcPopulationGivenProsperity(prosperity, band.population, random)
+}
+
+public data class GenderData(val male:Int, val female:Int)
+
+fun newBirths(prosperity: Float, population: Population, random: Random) : GenderData {
     var newBirthsM = 0
     var newBirthsF = 0
-    for (i in 1..band.population.adultFemale) {
-        if (random.nextFloat() < adultMaleFactor(band.population) * prosperity * 0.3f) {
+    for (i in 1..population.adultFemale) {
+        if (random.nextFloat() < adultMaleFactor(population) * prosperity * 0.3f) {
             if (random.nextFloat() < 0.5f) {
                 newBirthsM += 1
             } else {
@@ -267,9 +312,14 @@ fun updatePopulation(band: Band, world: World, random: Random) {
             }
         }
     }
+    return GenderData(newBirthsM, newBirthsF)
+}
+
+fun calcPopulationGivenProsperity(prosperity: Float, population: Population, random: Random) : Population {
+    val (newBirthsM, newBirthsF) = newBirths(prosperity, population, random)
     var chMdeaths = 0
     var chMgrowth = 0
-    for (i in 1..band.population.childrenMale) {
+    for (i in 1..population.childrenMale) {
         if (random.nextFloat() * random.nextFloat() > prosperity * 1.00f) {
             chMdeaths += 1
         } else if (random.nextFloat() > 0.5f) {
@@ -278,7 +328,7 @@ fun updatePopulation(band: Band, world: World, random: Random) {
     }
     var chFdeaths = 0
     var chFgrowth = 0
-    for (i in 1..band.population.childrenFemale) {
+    for (i in 1..population.childrenFemale) {
         if (random.nextFloat() * random.nextFloat() > prosperity * 1.00f) {
             chFdeaths += 1
         } else if (random.nextFloat() > 0.5f) {
@@ -287,7 +337,7 @@ fun updatePopulation(band: Band, world: World, random: Random) {
     }
     var adMdeaths = 0
     var adMgrowth = 0
-    for (i in 1..band.population.adultMale) {
+    for (i in 1..population.adultMale) {
         if (random.nextFloat() * random.nextFloat() > prosperity * 1.15f) {
             adMdeaths += 1
         } else if (random.nextFloat() > 0.3f) {
@@ -296,7 +346,7 @@ fun updatePopulation(band: Band, world: World, random: Random) {
     }
     var adFdeaths = 0
     var adFgrowth = 0
-    for (i in 1..band.population.adultFemale) {
+    for (i in 1..population.adultFemale) {
         if (random.nextFloat() * random.nextFloat() > prosperity * 1.15f) {
             adFdeaths += 1
         } else if (random.nextFloat() > 0.3f) {
@@ -304,31 +354,29 @@ fun updatePopulation(band: Band, world: World, random: Random) {
         }
     }
     var oldMdeaths = 0
-    for (i in 1..band.population.oldMale) {
+    for (i in 1..population.oldMale) {
         if (random.nextFloat() * random.nextFloat() > prosperity * 0.60f) {
             oldMdeaths += 1
         }
     }
     var oldFdeaths = 0
-    for (i in 1..band.population.oldFemale) {
+    for (i in 1..population.oldFemale) {
         if (random.nextFloat() * random.nextFloat() > prosperity * 0.60f) {
             oldFdeaths += 1
         }
     }
     val newPopulation = Population(
-            band.population.childrenMale + newBirthsM - chMdeaths - chMgrowth,
-            band.population.childrenFemale + newBirthsF - chFdeaths - chFgrowth,
-            band.population.adultMale + chMgrowth - adMdeaths - adMgrowth,
-            band.population.adultFemale + chFgrowth - adFdeaths - adFgrowth,
-            band.population.oldFemale + adFgrowth - oldFdeaths,
-            band.population.oldFemale + adFgrowth - oldFdeaths
+            population.childrenMale + newBirthsM - chMdeaths - chMgrowth,
+            population.childrenFemale + newBirthsF - chFdeaths - chFgrowth,
+            population.adultMale + chMgrowth - adMdeaths - adMgrowth,
+            population.adultFemale + chFgrowth - adFdeaths - adFgrowth,
+            population.oldFemale + adFgrowth - oldFdeaths,
+            population.oldFemale + adFgrowth - oldFdeaths
     )
-    println("OLD POPULATION "+ band.population)
-    println("NEW POPULATION "+ newPopulation)
-    band.population = newPopulation
+    return newPopulation
 }
 
-trait  SubstainmentActivity {
+interface SubstainmentActivity {
     fun prosperity(biome: Biome) : Float
 }
 

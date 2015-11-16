@@ -2,6 +2,7 @@
 package com.github.excaliburHisSheath;
 
 import java.util.*;
+import java.lang.String;
 
 public class NameGenerator {
 
@@ -16,7 +17,7 @@ public class NameGenerator {
 
 	// constructors ------------------------------------------------------------------------------------------------
 
-	public NameGenerator(String[] sourceNames) {
+	public NameGenerator(List<String> sourceNames) {
 		probabilities = new int[defaultChars.length][defaultChars.length][defaultChars.length];
 		characters = new ArrayList<Character>();
 		for (Character s : defaultChars)
@@ -77,7 +78,7 @@ public class NameGenerator {
 
 	// generates the probabilities matrix from $source
 	// precondition: $source is a correctly formated .txt file
-	private void generateProbabilities(String[] sourceNames) {
+	private void generateProbabilities(List<String> sourceNames) {
 		for (String name : sourceNames) {
 			addStringToProbability(name);
 		}

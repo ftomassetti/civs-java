@@ -12,14 +12,14 @@ import me.tomassetti.civs.model.Band;
 import me.tomassetti.civs.model.Position;
 import me.tomassetti.civs.model.WorldSize;
 import org.worldengine.world.World;
-import org.worldengine.world.WorldPackage;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import static me.tomassetti.civs.logic.LogicPackage.*;
+import static org.worldengine.world.WorldFileMsgPackLoaderKt.loadFromMsgPack;
+import static me.tomassetti.civs.logic.LogicKt.*;
 
 
 public class TileNavApp extends ApplicationAdapter implements InputProcessor {
@@ -87,7 +87,7 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         //tiledMap = new TmxMapLoader().load("tiled_seed_888_comp.tmx");
         //world = WorldPackage.loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_888.world"));
         tiledMap = new TmxMapLoader().load("tiled_seed_124.tmx");
-        world = WorldPackage.loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_124.world"));
+        world = loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_124.world"));
 
         groundLayer = (TiledMapTileLayer) tiledMap.getLayers().get("decoration ground");
         decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration high mountain"));
