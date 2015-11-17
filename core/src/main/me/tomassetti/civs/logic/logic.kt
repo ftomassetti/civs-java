@@ -293,95 +293,145 @@ fun adultMaleFactor(population: Population) : Float {
 }
 
 public fun updatePopulation(band: Band, world: World, random: Random) {
-    var prosperity = huntingAndGathering.prosperity(biomeAt(band.position, world))
-    prosperity *= (random.nextFloat() - 0.5f) / 10.0f
-    band.population = calcPopulationGivenProsperity(prosperity, band.population, random)
+    var prosperity = huntingAndGathering.prosperity(biomeAt(band.position, world), band.population)
+    var adaptedProsperity = huntingAndGathering.considerSubstaintability(prosperity, band.population)
+    band.population = calcPopulationGivenProsperity(adaptedProsperity, band.population, random)
 }
 
-public data class GenderData(val male:Int, val female:Int)
+public data class GenderData(val male:Int, val female:Int) {
+    fun total() : Int = male + female
+}
 
 fun newBirths(prosperity: Float, population: Population, random: Random) : GenderData {
-    var newBirthsM = 0
-    var newBirthsF = 0
-    for (i in 1..population.adultFemale) {
-        if (random.nextFloat() < adultMaleFactor(population) * prosperity * 0.3f) {
-            if (random.nextFloat() < 0.5f) {
-                newBirthsM += 1
-            } else {
-                newBirthsF += 1
-            }
+    var natalityFactor = 3.4 * adultMaleFactor(population) * population.adultFemale * ((prosperity + 6.0)/7)
+    var newBirthsTotal = Math.max(0, intRandomValue(random, natalityFactor, 0.55))
+    var newBirthsM = Math.max(0, intRandomValue(random, newBirthsTotal / 2.0, 0.3))
+    var newBirthsF = newBirthsTotal - newBirthsM
+    return GenderData(newBirthsM, newBirthsF)
+}
+
+public data class DeathsAndGrowths(val deaths:GenderData, val growth:GenderData)
+
+private fun mostExtreme(values : List<Float>) : Float {
+    if (values.size == 0) {
+        throw IllegalArgumentException()
+    } else if (values.size == 1) {
+        return values.get(0)
+    } else {
+        val other = mostExtreme(values.subList(1, values.size))
+        val first = values.get(0)
+        if (Math.abs(first - 0.5f) > Math.abs(other - 0.5f)) {
+            return first
+        } else {
+            return other
         }
     }
-    return GenderData(newBirthsM, newBirthsF)
+}
+
+private fun randomNumber(size: Int, random: Random) : Float {
+    if (size >= 15) {
+        return (random.nextFloat() + random.nextFloat() + random.nextFloat()) / 3.0f
+    } else if (size >= 7) {
+        return (random.nextFloat() + random.nextFloat()) / 2.0f
+    } else if (size >= 4){
+        return random.nextFloat()
+    } else if (size >= 2){
+        val values = ArrayList<Float>()
+        values.add(random.nextFloat())
+        values.add(random.nextFloat())
+        return mostExtreme(values)
+    } else {
+        val values = ArrayList<Float>()
+        values.add(random.nextFloat())
+        values.add(random.nextFloat())
+        values.add(random.nextFloat())
+        return mostExtreme(values)
+    }
+}
+
+private fun genericDeaths(prosperity: Float, male: Int, female: Int, random: Random, deathFactor: Float) : GenderData {
+    var correctedDeathFactor = deathFactor * ((3.0 + (1.0 - prosperity))/4.0)
+    val chMdeaths = Math.max(0, Math.min(male, intRandomValue(random, correctedDeathFactor * male.toDouble(), 1.0)))
+    val chFdeaths = Math.max(0, Math.min(female, intRandomValue(random, correctedDeathFactor * female.toDouble(), 1.0)))
+    return GenderData(chMdeaths, chFdeaths)
+}
+
+private fun round(v:Float, r:Random) : Int {
+    val base : Int = Math.ceil(v.toDouble()).toInt()
+    val rest : Float = v - base
+    if (r.nextFloat() < rest) {
+        return base + 1
+    } else {
+        return base
+    }
+}
+
+private fun round(v:Double, r:Random) : Int {
+    val base : Int = Math.ceil(v.toDouble()).toInt()
+    val rest : Double = v - base
+    if (r.nextDouble() < rest) {
+        return base + 1
+    } else {
+        return base
+    }
+}
+
+private fun genericDeathsAndGrowth(prosperity: Float, male: Int, female: Int, random: Random, deathFactor: Float, growthFactor: Float) : DeathsAndGrowths {
+    val (chMdeaths, chFdeaths) = genericDeaths(prosperity, male, female, random, deathFactor)
+
+    val chMgrowth = Math.max(0, intRandomValue(random, growthFactor * (male - chMdeaths).toDouble(), 0.65))
+    val chFgrowth = Math.max(0, intRandomValue(random, growthFactor * (female - chFdeaths).toDouble(), 0.65))
+    return DeathsAndGrowths(GenderData(chMdeaths, chFdeaths), GenderData(chMgrowth, chFgrowth))
+}
+
+fun childrenDeathsAndGrowth(prosperity: Float, population: Population, random: Random) : DeathsAndGrowths {
+    return genericDeathsAndGrowth(prosperity, population.childrenMale, population.childrenFemale, random, 0.28f, 0.5f)
+}
+
+fun adultsDeathsAndGrowth(prosperity: Float, population: Population, random: Random) : DeathsAndGrowths {
+    return genericDeathsAndGrowth(prosperity, population.adultMale, population.adultFemale, random, 0.155f, 0.3f)
+}
+
+fun oldDeaths(prosperity: Float, population: Population, random: Random) : GenderData {
+    return genericDeaths(prosperity, population.oldMale, population.oldFemale, random, 0.285f)
+}
+
+fun randomValue(random: Random, mean: Double, variance: Double) : Double {
+    return random.nextGaussian() * variance * mean + mean
+}
+
+fun intRandomValue(random: Random, mean: Double, variance: Double) : Int {
+    return round(randomValue(random, mean, variance), random)
 }
 
 fun calcPopulationGivenProsperity(prosperity: Float, population: Population, random: Random) : Population {
     val (newBirthsM, newBirthsF) = newBirths(prosperity, population, random)
-    var chMdeaths = 0
-    var chMgrowth = 0
-    for (i in 1..population.childrenMale) {
-        if (random.nextFloat() * random.nextFloat() > prosperity * 1.00f) {
-            chMdeaths += 1
-        } else if (random.nextFloat() > 0.5f) {
-            chMgrowth += 1
-        }
-    }
-    var chFdeaths = 0
-    var chFgrowth = 0
-    for (i in 1..population.childrenFemale) {
-        if (random.nextFloat() * random.nextFloat() > prosperity * 1.00f) {
-            chFdeaths += 1
-        } else if (random.nextFloat() > 0.5f) {
-            chFgrowth += 1
-        }
-    }
-    var adMdeaths = 0
-    var adMgrowth = 0
-    for (i in 1..population.adultMale) {
-        if (random.nextFloat() * random.nextFloat() > prosperity * 1.15f) {
-            adMdeaths += 1
-        } else if (random.nextFloat() > 0.3f) {
-            adMgrowth += 1
-        }
-    }
-    var adFdeaths = 0
-    var adFgrowth = 0
-    for (i in 1..population.adultFemale) {
-        if (random.nextFloat() * random.nextFloat() > prosperity * 1.15f) {
-            adFdeaths += 1
-        } else if (random.nextFloat() > 0.3f) {
-            adFgrowth += 1
-        }
-    }
-    var oldMdeaths = 0
-    for (i in 1..population.oldMale) {
-        if (random.nextFloat() * random.nextFloat() > prosperity * 0.60f) {
-            oldMdeaths += 1
-        }
-    }
-    var oldFdeaths = 0
-    for (i in 1..population.oldFemale) {
-        if (random.nextFloat() * random.nextFloat() > prosperity * 0.60f) {
-            oldFdeaths += 1
-        }
-    }
+    val (chDeaths, chGrowth) = childrenDeathsAndGrowth(prosperity, population, random)
+    val (chMdeaths, chFdeaths) = chDeaths
+    val (chMgrowth, chFgrowth) = chGrowth
+    val (adDeaths, adGrowth) = adultsDeathsAndGrowth(prosperity, population, random)
+    val (adMdeaths, adFdeaths) = adDeaths
+    val (adMgrowth, adFgrowth) = adGrowth
+    var (oldMdeaths, oldFdeaths) = oldDeaths(prosperity, population, random)
     val newPopulation = Population(
             population.childrenMale + newBirthsM - chMdeaths - chMgrowth,
             population.childrenFemale + newBirthsF - chFdeaths - chFgrowth,
             population.adultMale + chMgrowth - adMdeaths - adMgrowth,
             population.adultFemale + chFgrowth - adFdeaths - adFgrowth,
-            population.oldFemale + adFgrowth - oldFdeaths,
+            population.oldMale + adMgrowth - oldMdeaths,
             population.oldFemale + adFgrowth - oldFdeaths
     )
     return newPopulation
 }
 
 interface SubstainmentActivity {
-    fun prosperity(biome: Biome) : Float
+    fun prosperity(biome: Biome, population: Population) : Float
+
+    fun considerSubstaintability(prosperity: Float, population: Population): Float
 }
 
 object huntingAndGathering : SubstainmentActivity {
-    override fun prosperity(biome: Biome) : Float {
+    override fun prosperity(biome: Biome, population: Population) : Float {
         return when (biome) {
             ocean -> 0.0f
             ice -> 0.2f
@@ -424,6 +474,18 @@ object huntingAndGathering : SubstainmentActivity {
             warmTemperateThornScrub -> 0.50f
             warmTemperateWetForest -> 0.83f
             else -> throw RuntimeException(biome.name())
+        }
+    }
+
+    override fun considerSubstaintability(prosperity: Float, population: Population): Float {
+        val total = population.total()
+        if (total < 40) {
+            return prosperity
+        } else {
+            val crowdingPenalty = ((total/40.0 - 1.0)/2.5).toFloat()
+            val res = prosperity - crowdingPenalty
+            System.out.println("Prosperity " + prosperity +", total " + total +", res -> " + res)
+            return res
         }
     }
 }

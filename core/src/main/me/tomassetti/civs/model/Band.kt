@@ -1,12 +1,12 @@
 package me.tomassetti.civs.model
 
-import com.badlogic.gdx.maps.tiled.TiledMapTile
 import java.util.ArrayList
 
 public data class Population(val childrenMale: Int, val childrenFemale: Int,
                              val adultMale: Int, val adultFemale: Int,
                              val oldMale: Int, val oldFemale: Int) {
     fun total() : Int = childrenMale + childrenFemale + adultMale + adultFemale + oldMale + oldFemale
+    fun extinguished() : Boolean = total() == 0
 }
 
 public data class WorldSize(val width: Int, val height: Int)
