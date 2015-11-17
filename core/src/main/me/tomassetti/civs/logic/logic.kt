@@ -305,7 +305,7 @@ public data class GenderData(val male:Int, val female:Int) {
 fun newBirths(prosperity: Float, population: Population, random: Random) : GenderData {
     var natalityFactor = 3.4 * adultMaleFactor(population) * population.adultFemale * ((prosperity + 6.0)/7)
     var newBirthsTotal = Math.max(0, intRandomValue(random, natalityFactor, 0.55))
-    var newBirthsM = Math.max(0, intRandomValue(random, newBirthsTotal / 2.0, 0.3))
+    var newBirthsM = Math.max(0, Math.min(newBirthsTotal, intRandomValue(random, newBirthsTotal / 2.0, 0.3)))
     var newBirthsF = newBirthsTotal - newBirthsM
     return GenderData(newBirthsM, newBirthsF)
 }
@@ -350,6 +350,12 @@ private fun randomNumber(size: Int, random: Random) : Float {
 }
 
 private fun genericDeaths(prosperity: Float, male: Int, female: Int, random: Random, deathFactor: Float) : GenderData {
+    if (male < 0) {
+        throw IllegalArgumentException()
+    }
+    if (female < 0) {
+        throw IllegalArgumentException()
+    }
     var correctedDeathFactor = deathFactor * ((3.0 + (1.0 - prosperity))/4.0)
     val chMdeaths = Math.max(0, Math.min(male, intRandomValue(random, correctedDeathFactor * male.toDouble(), 1.0)))
     val chFdeaths = Math.max(0, Math.min(female, intRandomValue(random, correctedDeathFactor * female.toDouble(), 1.0)))
@@ -377,7 +383,19 @@ private fun round(v:Double, r:Random) : Int {
 }
 
 private fun genericDeathsAndGrowth(prosperity: Float, male: Int, female: Int, random: Random, deathFactor: Float, growthFactor: Float) : DeathsAndGrowths {
+    if (male < 0) {
+        throw IllegalArgumentException()
+    }
+    if (female < 0) {
+        throw IllegalArgumentException()
+    }
     val (chMdeaths, chFdeaths) = genericDeaths(prosperity, male, female, random, deathFactor)
+    if (chMdeaths < 0) {
+        throw RuntimeException()
+    }
+    if (chFdeaths < 0) {
+        throw RuntimeException()
+    }
 
     val chMgrowth = Math.min(male - chMdeaths, Math.max(0, intRandomValue(random, growthFactor * (male - chMdeaths).toDouble(), 0.65)))
     val chFgrowth = Math.min(female - chFdeaths, Math.max(0, intRandomValue(random, growthFactor * (female - chFdeaths).toDouble(), 0.65)))
@@ -413,6 +431,19 @@ fun calcPopulationGivenProsperity(prosperity: Float, population: Population, ran
     val (adMdeaths, adFdeaths) = adDeaths
     val (adMgrowth, adFgrowth) = adGrowth
     var (oldMdeaths, oldFdeaths) = oldDeaths(prosperity, population, random)
+
+    if (population.childrenMale - chMdeaths - chMgrowth < 0) {
+        throw RuntimeException("Children male: " + population.childrenMale +", deaths " + chMdeaths + ", growth " + chMgrowth)
+    }
+    if (population.childrenFemale - chFdeaths - chFgrowth < 0) {
+        throw RuntimeException("Children female: " + population.childrenFemale +", deaths " + chFdeaths + ", growth " + chFgrowth)
+    }
+    if (newBirthsM < 0) {
+        throw RuntimeException()
+    }
+    if (newBirthsF < 0) {
+        throw RuntimeException()
+    }
 
     val newChm = population.childrenMale + newBirthsM - chMdeaths - chMgrowth
     val newChf = population.childrenFemale + newBirthsF - chFdeaths - chFgrowth

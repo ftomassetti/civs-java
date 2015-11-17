@@ -1,9 +1,12 @@
 package me.tomassetti.civs.ui;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapImageLayer;
@@ -14,6 +17,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import me.tomassetti.civs.model.Band;
+import me.tomassetti.civs.simulation.Simulation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,13 +38,11 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
     private Vector2 bottomRight = new Vector2();
 
     private BitmapFont font;
-    private List<Band> bands;
     private LayerFinder layerFinder;
 
-    public MyTiledMapRendered(TiledMap map, List<Band> bands, LayerFinder layerFinder) {
+    public MyTiledMapRendered(TiledMap map, LayerFinder layerFinder) {
         super(map);
         init();
-        this.bands = bands;
         this.layerFinder = layerFinder;
     }
 
@@ -267,6 +269,30 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
             }
         }
         endRender();
+        renderHui();
+    }
+
+    private void renderHui() {
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
+        shapeRenderer.setAutoShapeType(true);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(0, 0, 0, 1);
+        shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), 50);
+        shapeRenderer.setColor(0, 1, 1, 1);
+        shapeRenderer.rect(0, 49, Gdx.graphics.getWidth(), 2);
+        shapeRenderer.end();
+
+
+        BitmapFont huiFont = new BitmapFont();
+        huiFont.setColor(Color.WHITE);
+        huiFont.getData().setScale(1.0f, 1.0f);
+
+        SpriteBatch huiBatch = new SpriteBatch();
+        huiBatch.begin();
+        huiFont.draw(huiBatch, "TURN " + Simulation.INSTANCE.getTurn(), 30, 30);
+        huiFont.draw(huiBatch, "BANDS " + Simulation.INSTANCE.nBandsAlive(), 180, 30);
+        huiFont.draw(huiBatch, "POP " + Simulation.INSTANCE.totalPopulation(), 330, 30);
+        huiBatch.end();
     }
 
     private void renderLabels(List<Band> bands, TiledMapTileLayer layer) {
@@ -289,7 +315,7 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
 
     private Map<MapLayer, List<Band>> divideBandsByLayer() {
         Map<MapLayer, List<Band>> bandsByLayer = new HashMap<>();
-        for (Band band : bands) {
+        for (Band band : Simulation.INSTANCE.getBands()) {
             MapLayer layer = layerFinder.decorationLayer(band.getPosition().getX(), band.getPosition().getY());
             if (!bandsByLayer.containsKey(layer)) {
                 bandsByLayer.put(layer, new ArrayList<>());

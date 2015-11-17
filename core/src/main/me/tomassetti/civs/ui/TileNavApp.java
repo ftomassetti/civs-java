@@ -7,35 +7,29 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.*;
-import com.github.excaliburHisSheath.NameGenerator;
 import me.tomassetti.civs.model.Band;
 import me.tomassetti.civs.model.Position;
-import me.tomassetti.civs.model.WorldSize;
-import org.worldengine.world.World;
+import me.tomassetti.civs.simulation.Simulation;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
-import static org.worldengine.world.WorldFileMsgPackLoaderKt.loadFromMsgPack;
+
 import static me.tomassetti.civs.logic.LogicKt.*;
+import static org.worldengine.world.WorldFileMsgPackLoaderKt.loadFromMsgPack;
 
 
 public class TileNavApp extends ApplicationAdapter implements InputProcessor {
 
-    private final static int N_INITIAL_TRIBES = 5;
+    private final static int N_INITIAL_TRIBES = 500;
 
     TiledMap tiledMap;
     OrthographicCamera camera;
     TiledMapRenderer tiledMapRenderer;
     long mapWidthInPixels;
     long mapHeightInPixels;
-    List<Band> bands = new ArrayList<>();
     TiledMapTileLayer groundLayer;
     TiledMapTile tentTile;
     TiledMapTile emptyTile;
-    World world;
 
     List<TiledMapTileLayer> decorationLayers = new ArrayList<>();
     List<TiledMapTileLayer> terrainLayers = new ArrayList<>();
@@ -84,10 +78,10 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         camera.setToOrtho(false, w, h);
         camera.position.set(w / 2f, h / 2f, 0);
         camera.update();
-        //tiledMap = new TmxMapLoader().load("tiled_seed_888_comp.tmx");
-        //world = WorldPackage.loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_888.world"));
-        tiledMap = new TmxMapLoader().load("tiled_seed_124.tmx");
-        world = loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_124.world"));
+        tiledMap = new TmxMapLoader().load("tiled_seed_18000_comp.tmx");
+        Simulation.INSTANCE.setWorld(loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_18000.world")));
+        //tiledMap = new TmxMapLoader().load("tiled_seed_124.tmx");
+        //Simulation.INSTANCE.setWorld(loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_124.world")));
 
         groundLayer = (TiledMapTileLayer) tiledMap.getLayers().get("decoration ground");
         decorationLayers.add((TiledMapTileLayer) tiledMap.getLayers().get("decoration high mountain"));
@@ -123,12 +117,12 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         }
 
         tentTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(133);
-        emptyTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(116);
+        emptyTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(256);
 
-        bands = createBands(world, N_INITIAL_TRIBES);
-        bands.forEach(b -> settingTent(b.getPosition()));
+        Simulation.INSTANCE.setBands(new ArrayList(createBands(Simulation.INSTANCE.getWorld(), N_INITIAL_TRIBES)));
+        Simulation.INSTANCE.getBands().forEach(b -> settingTent(b.getPosition()));
 
-        tiledMapRenderer = new MyTiledMapRendered(tiledMap, bands, new LayerFinder() {
+        tiledMapRenderer = new MyTiledMapRendered(tiledMap, new LayerFinder() {
             @Override
             public TiledMapTileLayer decorationLayer(int x, int y) {
                 return getDecorationLayer(x, y);
@@ -145,13 +139,14 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         TimerTask updateTask = new TimerTask() {
             @Override
             public void run() {
-                for (Band band : bands) {
+                Simulation.INSTANCE.nextTurn();
+                for (Band band : Simulation.INSTANCE.getBands()) {
                     restore(band.getPosition());
 
-                    updatePopulation(band, world, random);
+                    updatePopulation(band, Simulation.INSTANCE.getWorld(), random);
 
                     if (band.isAlive()) {
-                        band.setPosition(determineNewPosition(band, world, random));
+                        band.setPosition(determineNewPosition(band, Simulation.INSTANCE.getWorld(), random));
                         Position newPos = band.getPosition();
                         settingTent(newPos);
                     } else {
