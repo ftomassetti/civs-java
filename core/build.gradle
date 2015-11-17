@@ -1,32 +1,13 @@
 apply plugin: "java"
-apply plugin: 'kotlin'
+apply plugin: "kotlin"
 
 sourceCompatibility = 1.8
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-
-sourceSets.main.java.srcDirs = [ "src/main" ]
-sourceSets.test.java.srcDirs = [ "src/test" ]
-
 
 eclipse.project {
     name = appName + "-core"
 }
-buildscript {
-    ext.kotlin_version = '1.0.0-beta-2423'
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-repositories {
-    mavenCentral()
-}
 dependencies {
+    compile "com.badlogicgames.gdx:gdx:$gdxVersion"
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-}
-sourceSets {
-    main.java.srcDirs += 'src/main/kotlin'
 }

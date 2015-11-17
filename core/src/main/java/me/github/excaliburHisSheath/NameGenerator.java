@@ -1,5 +1,5 @@
 // This code arrives from https://github.com/excaliburHisSheath/NameGenerator
-package com.github.excaliburHisSheath;
+package me.github.excaliburHisSheath;
 
 import java.util.*;
 import java.lang.String;

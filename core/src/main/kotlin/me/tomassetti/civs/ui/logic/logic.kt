@@ -1,7 +1,7 @@
-package me.tomassetti.civs.logic
+package me.tomassetti.civs.ui.logic
 
 import me.tomassetti.civs.model.*
-import com.github.excaliburHisSheath.NameGenerator
+import me.github.excaliburHisSheath.NameGenerator
 import java.util.HashSet
 import java.util.Random
 import java.io.File

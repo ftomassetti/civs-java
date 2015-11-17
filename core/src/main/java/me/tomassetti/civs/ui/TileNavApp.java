@@ -14,7 +14,7 @@ import me.tomassetti.civs.simulation.Simulation;
 import java.io.File;
 import java.util.*;
 
-import static me.tomassetti.civs.logic.LogicKt.*;
+import static me.tomassetti.civs.ui.logic.LogicKt.*;
 import static org.worldengine.world.WorldFileMsgPackLoaderKt.loadFromMsgPack;
 
 
