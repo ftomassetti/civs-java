@@ -315,7 +315,7 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
 
     private Map<MapLayer, List<Band>> divideBandsByLayer() {
         Map<MapLayer, List<Band>> bandsByLayer = new HashMap<>();
-        for (Band band : Simulation.INSTANCE.getBands()) {
+        for (Band band : new ArrayList<>(Simulation.INSTANCE.bandsCopy())) {
             MapLayer layer = layerFinder.decorationLayer(band.getPosition().getX(), band.getPosition().getY());
             if (!bandsByLayer.containsKey(layer)) {
                 bandsByLayer.put(layer, new ArrayList<>());

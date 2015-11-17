@@ -1,4 +1,4 @@
-package me.tomassetti.civs.ui.logic;
+package me.tomassetti.civs.logic;
 
 import me.tomassetti.civs.model.Population;
 import org.junit.Test;
@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static me.tomassetti.civs.ui.logic.LogicKt.*;
+import static me.tomassetti.civs.logic.PopulationKt.*;
 import static org.junit.Assert.*;
 
 /**

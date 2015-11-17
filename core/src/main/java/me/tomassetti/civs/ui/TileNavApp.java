@@ -14,8 +14,8 @@ import me.tomassetti.civs.simulation.Simulation;
 import java.io.File;
 import java.util.*;
 
-import static me.tomassetti.civs.ui.logic.LogicKt.*;
 import static org.worldengine.world.WorldFileMsgPackLoaderKt.loadFromMsgPack;
+import static me.tomassetti.civs.logic.LogicKt.*;
 
 
 public class TileNavApp extends ApplicationAdapter implements InputProcessor {
@@ -119,8 +119,9 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         tentTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(133);
         emptyTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(256);
 
-        Simulation.INSTANCE.setBands(new ArrayList(createBands(Simulation.INSTANCE.getWorld(), N_INITIAL_TRIBES)));
-        Simulation.INSTANCE.getBands().forEach(b -> settingTent(b.getPosition()));
+
+        createBands(Simulation.INSTANCE.getWorld(), N_INITIAL_TRIBES);
+        Simulation.INSTANCE.bandsCopy().forEach(b -> settingTent(b.getPosition()));
 
         tiledMapRenderer = new MyTiledMapRendered(tiledMap, new LayerFinder() {
             @Override
@@ -140,19 +141,26 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
             @Override
             public void run() {
                 Simulation.INSTANCE.nextTurn();
-                for (Band band : Simulation.INSTANCE.getBands()) {
+                List<Band> newBands = new ArrayList<>();
+                for (Band band : Simulation.INSTANCE.bandsCopy()) {
                     restore(band.getPosition());
 
-                    updatePopulation(band, Simulation.INSTANCE.getWorld(), random);
+                    me.tomassetti.civs.logic.PopulationKt.updatePopulation(band, Simulation.INSTANCE.getWorld(), random);
 
                     if (band.isAlive()) {
-                        band.setPosition(determineNewPosition(band, Simulation.INSTANCE.getWorld(), random));
+                        band.setPosition(me.tomassetti.civs.logic.LogicKt.determineNewPosition(band, Simulation.INSTANCE.getWorld(), random));
                         Position newPos = band.getPosition();
                         settingTent(newPos);
+
+                        if (decideIfSplit(band)) {
+                            Band newBand = split(band);
+                            newBands.add(newBand);
+                        }
                     } else {
                         restore(band.getPosition());
                     }
                 }
+                newBands.stream().forEach(b -> Simulation.INSTANCE.addBand(b));
             }
         };
         new Timer().scheduleAtFixedRate(updateTask, 5000, 1000);
