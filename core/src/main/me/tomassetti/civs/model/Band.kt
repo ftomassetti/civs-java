@@ -50,6 +50,10 @@ public class Band(val id:Int, val name:String, var position:Position, var popula
     override fun toString(): String {
         return "Band " + name
     }
+
+    fun isAlive(): Boolean {
+        return !population.extinguished()
+    }
 }
 
 fun move(p: Position, dx: Int, dy: Int) : Position {

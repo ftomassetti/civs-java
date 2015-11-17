@@ -122,7 +122,7 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
             }
         }
 
-        tentTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(106);
+        tentTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(133);
         emptyTile = tiledMap.getTileSets().getTileSet("256_decor").getTile(116);
 
         bands = createBands(world, N_INITIAL_TRIBES);
@@ -149,10 +149,14 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
                     restore(band.getPosition());
 
                     updatePopulation(band, world, random);
-                    band.setPosition(determineNewPosition(band, world, random));
 
-                    Position newPos = band.getPosition();
-                    settingTent(newPos);
+                    if (band.isAlive()) {
+                        band.setPosition(determineNewPosition(band, world, random));
+                        Position newPos = band.getPosition();
+                        settingTent(newPos);
+                    } else {
+                        restore(band.getPosition());
+                    }
                 }
             }
         };

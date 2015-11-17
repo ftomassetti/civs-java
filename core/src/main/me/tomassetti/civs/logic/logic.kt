@@ -379,8 +379,8 @@ private fun round(v:Double, r:Random) : Int {
 private fun genericDeathsAndGrowth(prosperity: Float, male: Int, female: Int, random: Random, deathFactor: Float, growthFactor: Float) : DeathsAndGrowths {
     val (chMdeaths, chFdeaths) = genericDeaths(prosperity, male, female, random, deathFactor)
 
-    val chMgrowth = Math.max(0, intRandomValue(random, growthFactor * (male - chMdeaths).toDouble(), 0.65))
-    val chFgrowth = Math.max(0, intRandomValue(random, growthFactor * (female - chFdeaths).toDouble(), 0.65))
+    val chMgrowth = Math.min(male - chMdeaths, Math.max(0, intRandomValue(random, growthFactor * (male - chMdeaths).toDouble(), 0.65)))
+    val chFgrowth = Math.min(female - chFdeaths, Math.max(0, intRandomValue(random, growthFactor * (female - chFdeaths).toDouble(), 0.65)))
     return DeathsAndGrowths(GenderData(chMdeaths, chFdeaths), GenderData(chMgrowth, chFgrowth))
 }
 
@@ -413,14 +413,34 @@ fun calcPopulationGivenProsperity(prosperity: Float, population: Population, ran
     val (adMdeaths, adFdeaths) = adDeaths
     val (adMgrowth, adFgrowth) = adGrowth
     var (oldMdeaths, oldFdeaths) = oldDeaths(prosperity, population, random)
-    val newPopulation = Population(
-            population.childrenMale + newBirthsM - chMdeaths - chMgrowth,
-            population.childrenFemale + newBirthsF - chFdeaths - chFgrowth,
-            population.adultMale + chMgrowth - adMdeaths - adMgrowth,
-            population.adultFemale + chFgrowth - adFdeaths - adFgrowth,
-            population.oldMale + adMgrowth - oldMdeaths,
-            population.oldFemale + adFgrowth - oldFdeaths
-    )
+
+    val newChm = population.childrenMale + newBirthsM - chMdeaths - chMgrowth
+    val newChf = population.childrenFemale + newBirthsF - chFdeaths - chFgrowth
+    val newAdm = population.adultMale + chMgrowth - adMdeaths - adMgrowth
+    val newAdf = population.adultFemale + chFgrowth - adFdeaths - adFgrowth
+    val newOlm = population.oldMale + adMgrowth - oldMdeaths
+    val newOlf = population.oldFemale + adFgrowth - oldFdeaths
+
+    if (newChm < 0) {
+        throw RuntimeException()
+    }
+    if (newChf < 0) {
+        throw RuntimeException()
+    }
+    if (newAdm < 0) {
+        throw RuntimeException()
+    }
+    if (newAdf < 0) {
+        throw RuntimeException()
+    }
+    if (newOlm < 0) {
+        throw RuntimeException()
+    }
+    if (newOlf < 0) {
+        throw RuntimeException()
+    }
+
+    val newPopulation = Population(newChm, newChf, newAdm, newAdf, newOlm, newOlf)
     return newPopulation
 }
 
