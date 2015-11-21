@@ -17,10 +17,7 @@ import kotlin.Pair;
 import me.tomassetti.civs.model.Band;
 import me.tomassetti.civs.simulation.Simulation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.badlogic.gdx.graphics.g2d.Batch.*;
 
@@ -404,6 +401,8 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
     final Vector3 intersection = new Vector3();
     Sprite lastSelectedTile = null;
 
+    private Optional<Pair<Integer, Integer>> selectedTile = Optional.empty();
+
     private void checkTileTouched() {
         //System.out.println("MOUSE X="+Gdx.input.getX()+",Y"+Gdx.input.getY());
         //System.out.println("CAMERA X=" + TileNavApp.camera.position.x + "Y=" + TileNavApp.camera.position.y);
@@ -411,26 +410,37 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         float fy = TileNavApp.camera.viewportHeight/Gdx.graphics.getHeight();
         float x = TileNavApp.camera.position.x + (Gdx.input.getX() * fx - TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom;
         float y = TileNavApp.camera.position.y + (TileNavApp.camera.viewportHeight/2 - Gdx.input.getY() * fy) * TileNavApp.camera.zoom;
-        int normalizedX = (int)(x/128);
-        int normalizedY = (int)(y/64) - 1;
-        int restX = (int)(x/2 - normalizedX * 64);
-        int restY = (int)(y - normalizedY * 64) - 64;
-        if (restY < 0) {
-            restY += 64;
-        }
-        Pair<Integer, Integer> cellCoords = new CellCoordinatesCalculator().cellCoords(normalizedX, normalizedY, restX, restY);
+        Pair<Integer, Integer> cellCoords = findCellCoords(x, y);
+        selectedTile = Optional.of(cellCoords);
         SpriteBatch huiBatch = new SpriteBatch();
         BitmapFont huiFont = new BitmapFont();
         huiFont.setColor(Color.WHITE);
         huiFont.getData().setScale(1.0f, 1.0f);
 
         huiBatch.begin();
-        huiFont.draw(huiBatch, ("X="+normalizedX+", Y="+normalizedY), 30, Gdx.graphics.getHeight() - 10);
-        huiFont.draw(huiBatch, ("RESTX="+restX+", RESTY="+restY), 30, Gdx.graphics.getHeight() - 35);
+        //huiFont.draw(huiBatch, ("X="+normalizedX+", Y="+normalizedY), 30, Gdx.graphics.getHeight() - 10);
+        //huiFont.draw(huiBatch, ("RESTX="+restX+", RESTY="+restY), 30, Gdx.graphics.getHeight() - 35);
         huiFont.draw(huiBatch, ("ROW="+cellCoords.getFirst()+", COL="+cellCoords.getSecond()), 30, Gdx.graphics.getHeight() - 60);
         //huiFont.draw(huiBatch, "BANDS " + Simulation.INSTANCE.nBandsAlive(), 180, 30);
         //huiFont.draw(huiBatch, "POP " + Simulation.INSTANCE.totalPopulation(), 330, 30);
         huiBatch.end();
+
+        float baseX = - TileNavApp.camera.position.x / TileNavApp.camera.zoom + (TileNavApp.camera.viewportWidth/2);/*+ (cellCoords.getSecond() * fx + TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom*/;
+        float baseY = - (TileNavApp.camera.position.y - 64) / TileNavApp.camera.zoom + TileNavApp.camera.viewportHeight/2;
+        baseX += 128/TileNavApp.camera.zoom * (cellCoords.getSecond() + cellCoords.getFirst());
+        baseY += 64/TileNavApp.camera.zoom * (-cellCoords.getSecond() + cellCoords.getFirst());
+        //baseX = fx;
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
+        shapeRenderer.setAutoShapeType(true);
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY + 64/TileNavApp.camera.zoom);
+        shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY - 64/TileNavApp.camera.zoom);
+        shapeRenderer.line(0 + baseX + 128/TileNavApp.camera.zoom, 0 + baseY - 64/TileNavApp.camera.zoom, baseX + 256/TileNavApp.camera.zoom, baseY);
+        shapeRenderer.line(0 + baseX + 128/TileNavApp.camera.zoom, 0 + baseY + 64/TileNavApp.camera.zoom, baseX + 256/TileNavApp.camera.zoom, baseY);
+        //shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY + 64/TileNavApp.camera.zoom);
+        //shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY - 64/TileNavApp.camera.zoom);
+        shapeRenderer.end();
 
 
         //System.out.println("X="+normalizedX+", Y="+normalizedY);
@@ -438,5 +448,58 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         //System.out.println("ROW="+row+", COL="+col);
         //System.out.println("VIEWPORT WIDTH " + TileNavApp.camera.viewportWidth);
     }
+
+
+    private Pair<Integer, Integer> findCellCoords(float x, float y) {
+        //y -= 48 * level * TileNavApp.camera.zoom;
+        int normalizedX = (int)(x/128);
+        int normalizedY = (int)(y/64) - 1;
+        int restX = (int)(x/2 - normalizedX * 64);
+        int restY = (int)(y - normalizedY * 64) - 64;
+        if (restY < 0) {
+            restY += 64;
+        }
+        Pair<Integer, Integer> coords = new CellCoordinatesCalculator().cellCoords(normalizedX, normalizedY, restX, restY);
+        return coords;
+    }
+
+    /*
+
+
+    private boolean existLevel(Pair<Integer, Integer> coords, int level) {
+        return level == 0;
+    }
+
+    private Optional<Pair<Integer, Integer>> findCellCoords(float x, float y, int level) {
+       //y -= 48 * level * TileNavApp.camera.zoom;
+        int normalizedX = (int)(x/128);
+        int normalizedY = (int)(y/64) - 1;
+        int restX = (int)(x/2 - normalizedX * 64);
+        int restY = (int)(y - normalizedY * 64) - 64;
+        if (restY < 0) {
+            restY += 64;
+        }
+        Pair<Integer, Integer> coords = new CellCoordinatesCalculator().cellCoords(normalizedX, normalizedY, restX, restY);
+        if (existLevel(coords, level)) {
+            return Optional.of(coords);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private static int TOP_LAYER = 10;
+    private static int BOTTOM_LAYER = 0;
+
+    private Pair<Integer, Integer> findCellCoords(float x, float y) {
+        for (int level=TOP_LAYER;level>=BOTTOM_LAYER;level--) {
+            Optional<Pair<Integer, Integer>> res = findCellCoords(x, y, level);
+            if (res.isPresent()) {
+                System.out.println("FIND AT LEVEL " + level);
+                return res.get();
+            }
+        }
+
+        throw new RuntimeException();
+    }*/
 
 }
