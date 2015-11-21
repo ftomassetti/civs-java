@@ -7,6 +7,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.*;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import me.tomassetti.civs.model.Band;
 import me.tomassetti.civs.model.Position;
 import me.tomassetti.civs.simulation.Simulation;
@@ -23,7 +24,7 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
     private final static int N_INITIAL_TRIBES = 500;
 
     TiledMap tiledMap;
-    OrthographicCamera camera;
+    public static OrthographicCamera camera;
     TiledMapRenderer tiledMapRenderer;
     long mapWidthInPixels;
     long mapHeightInPixels;
@@ -79,6 +80,7 @@ public class TileNavApp extends ApplicationAdapter implements InputProcessor {
         camera.position.set(w / 2f, h / 2f, 0);
         camera.update();
         tiledMap = new TmxMapLoader().load("tiled_seed_18000_comp.tmx");
+
         Simulation.INSTANCE.setWorld(loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_18000.world")));
         //tiledMap = new TmxMapLoader().load("tiled_seed_124.tmx");
         //Simulation.INSTANCE.setWorld(loadFromMsgPack(new File("/home/federico/repos/worldengine/seed_124.world")));
