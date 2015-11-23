@@ -34,14 +34,11 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
 
     private BitmapFont font;
     private LayerFinder layerFinder;
-    //private TiledMapStage stage;
 
     public MyTiledMapRendered(TiledMap map, LayerFinder layerFinder) {
         super(map);
         init();
         this.layerFinder = layerFinder;
-        //stage = new TiledMapStage(map);
-        //Gdx.input.setInputProcessor(stage);
     }
 
     private void init () {
@@ -351,10 +348,6 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
 
         font.draw(batch, text, textX, textY);
     }
-
-    final Plane xzPlane = new Plane(new Vector3(0, 1, 0), 0);
-    final Vector3 intersection = new Vector3();
-    Sprite lastSelectedTile = null;
 
     private Optional<Pair<Integer, Integer>> selectedTile = Optional.empty();
 
