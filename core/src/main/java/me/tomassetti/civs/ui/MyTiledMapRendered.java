@@ -101,6 +101,13 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
 
     @Override
     public void renderTileLayer(TiledMapTileLayer layer) {
+        if (TileNavApp.camera.zoom > 8.0f) {
+            if (!layer.getName().equals("ground")) {
+                return;
+            }
+        }
+
+
         final Color batchColor = batch.getColor();
         final float color = Color.toFloatBits(batchColor.r, batchColor.g, batchColor.b, batchColor.a * layer.getOpacity());
 
@@ -128,8 +135,19 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         int col1 = (int)(translateScreenToIso(bottomLeft).x / tileWidth) - 2;
         int col2 = (int)(translateScreenToIso(topRight).x / tileWidth) + 2;
 
+        int step = -1;
+        if (TileNavApp.camera.zoom > 8.0f) {
+            step = (int)(TileNavApp.camera.zoom/8);
+        }
+
         for (int row = row2; row >= row1; row--) {
+            if (step != -1 && row % step != 0) {
+                continue;
+            }
             for (int col = col1; col <= col2; col++) {
+                if (step != -1 && col % step != 0) {
+                    continue;
+                }
                 float x = (col * halfTileWidth) + (row * halfTileWidth);
                 float y = (row * halfTileHeight) - (col * halfTileHeight);
 
@@ -148,6 +166,10 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
                     float y1 = y + tile.getOffsetY() * unitScale - layerOffsetY;
                     float x2 = x1 + region.getRegionWidth() * unitScale;
                     float y2 = y1 + region.getRegionHeight() * unitScale;
+                    if (step != -1) {
+                        x2 = x1 + region.getRegionWidth() * unitScale * step;
+                        y2 = y1 + region.getRegionHeight() * unitScale * step;
+                    }
 
                     float u1 = region.getU();
                     float v1 = region.getV2();
