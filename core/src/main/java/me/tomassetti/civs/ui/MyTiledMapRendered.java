@@ -272,6 +272,7 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
     }
 
     private void renderHui() {
+        checkTileTouched();
         renderBottomHui();
         renderLateralHui();
     }
@@ -311,52 +312,6 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         shapeRenderer.setColor(0, 1, 1, 1);
         shapeRenderer.rect(startX, 49, 2, Gdx.graphics.getHeight() - 49);
         shapeRenderer.end();
-
-        float tileWidth = 512 * unitScale;
-        float tileHeight = 512 * unitScale;
-        float zoom = TileNavApp.camera.zoom;
-        Vector3 position = TileNavApp.camera.position;
-        Vector3 v1 = TileNavApp.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY(), 0f));
-
-        float baseX = v1.x/128 -0.5f;
-        float baseY = v1.y/64;
-
-
-        //System.out.println("X " + baseX + ", Y " + baseY);
-        //Vector3 v = translateScreenToIso(new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY()));
-        Vector3 v = translateScreenToIso(new Vector2(
-                position.x + (Gdx.input.getX() - Gdx.graphics.getWidth()),
-                position.y + (Gdx.input.getY() - Gdx.graphics.getHeight())));
-        //System.out.println("ZERO SCREEN TO ISO -> X " + v.x + ", Y " + v.y + " ZOOM " + zoom);
-        checkTileTouched();
-        //System.out.println("SX " + Gdx.input.getX() + ", SY " + Gdx.input.getY());
-        //System.out.println("X " + v.x/tileWidth + ", Y " + v.y/tileHeight);
-
-        //float col = - v.x/512 + v.y/128 - 1.0f;
-        //float row = v.x/512 + v.y/128 - 2.0f;
-        //System.out.println("COL " + col + ", ROW " + row);
-//        touchPos.set(Gdx.input.getX() , Gdx.graphics.getHeight() - Gdx.input.getY(), 0);
-//        Vector3 tile = TileNavApp.camera.unproject(touchPos);
-//        tile = translateScreenToIso(new Vector2(tile.x, tile.y));
-//        System.out.println("ROW " + tile.x);
-//        System.out.println("COL " + tile.y);
-
-//        Vector2 pos = new Vector2(viewBounds.x + Gdx.input.getX(), viewBounds.y + Gdx.input.getY());
-//        int row = (int)(translateScreenToIso(pos).y / tileWidth) - 1;
-//        int col = (int)(translateScreenToIso(pos).x / tileWidth) + 1;
-//        System.out.println("ROW " + row);
-//        System.out.println("COL " + col);
-
-        /*BitmapFont huiFont = new BitmapFont();
-        huiFont.setColor(Color.WHITE);
-        huiFont.getData().setScale(1.0f, 1.0f);
-
-        SpriteBatch huiBatch = new SpriteBatch();
-        huiBatch.begin();
-        huiFont.draw(huiBatch, "TURN " + Simulation.INSTANCE.getTurn(), 30, 30);
-        huiFont.draw(huiBatch, "BANDS " + Simulation.INSTANCE.nBandsAlive(), 180, 30);
-        huiFont.draw(huiBatch, "POP " + Simulation.INSTANCE.totalPopulation(), 330, 30);
-        huiBatch.end();*/
     }
 
     private void renderLabels(List<Band> bands, TiledMapTileLayer layer) {
@@ -403,35 +358,9 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
 
     private Optional<Pair<Integer, Integer>> selectedTile = Optional.empty();
 
-    private void checkTileTouched() {
-        //System.out.println("MOUSE X="+Gdx.input.getX()+",Y"+Gdx.input.getY());
-        //System.out.println("CAMERA X=" + TileNavApp.camera.position.x + "Y=" + TileNavApp.camera.position.y);
+    private void highlightCell(Pair<Integer, Integer> cellCoords) {
         float fx = TileNavApp.camera.viewportWidth/Gdx.graphics.getWidth();
         float fy = TileNavApp.camera.viewportHeight/Gdx.graphics.getHeight();
-        float x = TileNavApp.camera.position.x + (Gdx.input.getX() * fx - TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom;
-        float y = TileNavApp.camera.position.y + (TileNavApp.camera.viewportHeight/2 - Gdx.input.getY() * fy) * TileNavApp.camera.zoom;
-        Pair<Integer, Integer> cellCoords = new CellCoordinatesCalculator().findCellCoords(
-                TileNavApp.camera.viewportWidth, TileNavApp.camera.viewportHeight,
-                Gdx.graphics.getWidth(), Gdx.graphics.getHeight(),
-                TileNavApp.camera.position.x, TileNavApp.camera.position.y, TileNavApp.camera.zoom,
-                Gdx.input.getX(), Gdx.input.getY());
-        selectedTile = Optional.of(cellCoords);
-        SpriteBatch huiBatch = new SpriteBatch();
-        BitmapFont huiFont = new BitmapFont();
-        huiFont.setColor(Color.WHITE);
-        huiFont.getData().setScale(1.0f, 1.0f);
-
-        huiBatch.begin();
-        huiFont.draw(huiBatch, ("VIEWPORT WIDTH="+TileNavApp.camera.viewportWidth+", HEIGHT="+TileNavApp.camera.viewportHeight), 30, Gdx.graphics.getHeight() - 10);
-        huiFont.draw(huiBatch, ("CAMERA X="+TileNavApp.camera.position.x+", Y="+TileNavApp.camera.position.y + ", ZOOM="+TileNavApp.camera.zoom), 30, Gdx.graphics.getHeight() - 35);
-        huiFont.draw(huiBatch, ("SCREEN WIDTH="+Gdx.graphics.getWidth()+", HEIGHT="+Gdx.graphics.getHeight()), 30, Gdx.graphics.getHeight() - 60);
-        huiFont.draw(huiBatch, ("INPUT X="+Gdx.input.getX()+", Y="+Gdx.input.getY()), 30, Gdx.graphics.getHeight() - 90);
-        //huiFont.draw(huiBatch, ("X="+normalizedX+", Y="+normalizedY), 30, Gdx.graphics.getHeight() - 10);
-        //huiFont.draw(huiBatch, ("RESTX="+restX+", RESTY="+restY), 30, Gdx.graphics.getHeight() - 35);
-        huiFont.draw(huiBatch, ("ROW="+cellCoords.getFirst()+", COL="+cellCoords.getSecond()), 30, Gdx.graphics.getHeight() - 120);
-        //huiFont.draw(huiBatch, "BANDS " + Simulation.INSTANCE.nBandsAlive(), 180, 30);
-        //huiFont.draw(huiBatch, "POP " + Simulation.INSTANCE.totalPopulation(), 330, 30);
-        huiBatch.end();
 
         float baseX = - TileNavApp.camera.position.x / (fx*TileNavApp.camera.zoom) + ((TileNavApp.camera.viewportWidth/fx)/2);/*+ (cellCoords.getSecond() * fx + TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom*/;
         float baseY = - (TileNavApp.camera.position.y - 64) / (fy*TileNavApp.camera.zoom) + (TileNavApp.camera.viewportHeight/fy)/2;
@@ -443,49 +372,39 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        shapeRenderer.setColor(Color.GREEN);
-        shapeRenderer.rect(0f, 0f, 128.0f / (fx*TileNavApp.camera.zoom), 128.0f / (fy*TileNavApp.camera.zoom));
-
         shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.line(baseX, 0 + baseY, baseX + 128.0f/(TileNavApp.camera.zoom*fx), baseY + 64.0f/(TileNavApp.camera.zoom*fy));
         shapeRenderer.line(baseX, 0 + baseY, baseX + 128.0f/(TileNavApp.camera.zoom*fx), baseY - 64.0f/(TileNavApp.camera.zoom*fy));
         shapeRenderer.line(baseX + 128.0f/(TileNavApp.camera.zoom*fx), 0 + baseY - 64.0f/(TileNavApp.camera.zoom*fy), baseX + 256.0f/(TileNavApp.camera.zoom*fx), baseY);
         shapeRenderer.line(baseX + 128.0f/(TileNavApp.camera.zoom*fx), 0 + baseY + 64.0f/(TileNavApp.camera.zoom*fy), baseX + 256.0f/(TileNavApp.camera.zoom*fx), baseY);
-        //shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY + 64/TileNavApp.camera.zoom);
-        //shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY - 64/TileNavApp.camera.zoom);
         shapeRenderer.end();
 
-        System.out.println("FX " + fx);
-
-        //System.out.println("X="+normalizedX+", Y="+normalizedY);
-        //System.out.println("RESTX="+restX+", RESTY="+restY);
-        //System.out.println("ROW="+row+", COL="+col);
-        //System.out.println("VIEWPORT WIDTH " + TileNavApp.camera.viewportWidth);
     }
 
-    private Pair<Integer, Integer> findCellCoords(float viewportWidth, float viewportHeight,
-                                                  float screenWidth, float screenHeight,
-                                                  float cameraX, float cameraY, float zoom,
-                                                  float inputX, float inputY) {
-        float fx = viewportWidth/screenWidth;
-        float fy = viewportHeight/screenHeight;
-        float xa = cameraX + (inputX * fx - viewportWidth/2) * zoom;
-        float ya = cameraY + (viewportHeight/2 - inputY * fy) * zoom;
-        return findCellCoords(xa, ya);
-    }
-
-
-    private Pair<Integer, Integer> findCellCoords(float x, float y) {
-        //y -= 48 * level * TileNavApp.camera.zoom;
-        int normalizedX = (int)(x/128);
-        int normalizedY = (int)(y/64) - 1;
-        int restX = (int)(x/2 - normalizedX * 64);
-        int restY = (int)(y - normalizedY * 64) - 64;
-        if (restY < 0) {
-            restY += 64;
+    private void checkTileTouched() {
+        Pair<Integer, Integer> cellCoords = new CellCoordinatesCalculator().findCellCoords(
+                TileNavApp.camera.viewportWidth, TileNavApp.camera.viewportHeight,
+                Gdx.graphics.getWidth(), Gdx.graphics.getHeight(),
+                TileNavApp.camera.position.x, TileNavApp.camera.position.y, TileNavApp.camera.zoom,
+                Gdx.input.getX(), Gdx.input.getY());
+        if (cellCoords.getFirst() < 0 || cellCoords.getSecond() < 0) {
+            return;
         }
-        Pair<Integer, Integer> coords = new CellCoordinatesCalculator().cellCoords(normalizedX, normalizedY, restX, restY);
-        return coords;
+        selectedTile = Optional.of(cellCoords);
+        SpriteBatch huiBatch = new SpriteBatch();
+        BitmapFont huiFont = new BitmapFont();
+        huiFont.setColor(Color.WHITE);
+        huiFont.getData().setScale(1.0f, 1.0f);
+
+        highlightCell(cellCoords);
+
+        huiBatch.begin();
+        //huiFont.draw(huiBatch, ("VIEWPORT WIDTH="+TileNavApp.camera.viewportWidth+", HEIGHT="+TileNavApp.camera.viewportHeight), 30, Gdx.graphics.getHeight() - 10);
+        //huiFont.draw(huiBatch, ("CAMERA X="+TileNavApp.camera.position.x+", Y="+TileNavApp.camera.position.y + ", ZOOM="+TileNavApp.camera.zoom), 30, Gdx.graphics.getHeight() - 35);
+        //huiFont.draw(huiBatch, ("SCREEN WIDTH="+Gdx.graphics.getWidth()+", HEIGHT="+Gdx.graphics.getHeight()), 30, Gdx.graphics.getHeight() - 60);
+        //huiFont.draw(huiBatch, ("INPUT X="+Gdx.input.getX()+", Y="+Gdx.input.getY()), 30, Gdx.graphics.getHeight() - 90);
+        huiFont.draw(huiBatch, ("ROW="+cellCoords.getFirst()+", COL="+cellCoords.getSecond()), 30, Gdx.graphics.getHeight() - 10);
+        huiBatch.end();
     }
 
     /*
