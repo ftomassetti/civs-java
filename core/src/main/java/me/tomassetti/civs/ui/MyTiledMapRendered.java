@@ -433,19 +433,24 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         //huiFont.draw(huiBatch, "POP " + Simulation.INSTANCE.totalPopulation(), 330, 30);
         huiBatch.end();
 
-        float baseX = - TileNavApp.camera.position.x / (TileNavApp.camera.zoom) + (TileNavApp.camera.viewportWidth/2);/*+ (cellCoords.getSecond() * fx + TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom*/;
-        float baseY = - (TileNavApp.camera.position.y - 64) / (TileNavApp.camera.zoom) + TileNavApp.camera.viewportHeight/2;
-        baseX += 128/(TileNavApp.camera.zoom) * (cellCoords.getSecond() + cellCoords.getFirst());
-        baseY += 64/(TileNavApp.camera.zoom) * (-cellCoords.getSecond() + cellCoords.getFirst());
+        float baseX = - TileNavApp.camera.position.x / (fx*TileNavApp.camera.zoom) + ((TileNavApp.camera.viewportWidth/fx)/2);/*+ (cellCoords.getSecond() * fx + TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom*/;
+        float baseY = - (TileNavApp.camera.position.y - 64) / (fy*TileNavApp.camera.zoom) + (TileNavApp.camera.viewportHeight/fy)/2;
+        baseX += 128.0/(fx*TileNavApp.camera.zoom) * (cellCoords.getSecond() + cellCoords.getFirst());
+        baseY += 64/(fy*TileNavApp.camera.zoom) * (-cellCoords.getSecond() + cellCoords.getFirst());
         //baseX = fx;
         ShapeRenderer shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
         shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128.0f/(TileNavApp.camera.zoom*fx), baseY + 64.0f/(TileNavApp.camera.zoom*fy));
-        shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128.0f/(TileNavApp.camera.zoom*fx), baseY - 64.0f/(TileNavApp.camera.zoom*fy));
-        shapeRenderer.line(0 + baseX + 128.0f/(TileNavApp.camera.zoom*fx), 0 + baseY - 64.0f/(TileNavApp.camera.zoom*fy), baseX + 256.0f/(TileNavApp.camera.zoom*fx), baseY);
-        shapeRenderer.line(0 + baseX + 128.0f/(TileNavApp.camera.zoom*fx), 0 + baseY + 64.0f/(TileNavApp.camera.zoom*fy), baseX + 256.0f/(TileNavApp.camera.zoom*fx), baseY);
+
+        shapeRenderer.setColor(Color.GREEN);
+        shapeRenderer.rect(0f, 0f, 128.0f / (fx*TileNavApp.camera.zoom), 128.0f / (fy*TileNavApp.camera.zoom));
+
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.line(baseX, 0 + baseY, baseX + 128.0f/(TileNavApp.camera.zoom*fx), baseY + 64.0f/(TileNavApp.camera.zoom*fy));
+        shapeRenderer.line(baseX, 0 + baseY, baseX + 128.0f/(TileNavApp.camera.zoom*fx), baseY - 64.0f/(TileNavApp.camera.zoom*fy));
+        shapeRenderer.line(baseX + 128.0f/(TileNavApp.camera.zoom*fx), 0 + baseY - 64.0f/(TileNavApp.camera.zoom*fy), baseX + 256.0f/(TileNavApp.camera.zoom*fx), baseY);
+        shapeRenderer.line(baseX + 128.0f/(TileNavApp.camera.zoom*fx), 0 + baseY + 64.0f/(TileNavApp.camera.zoom*fy), baseX + 256.0f/(TileNavApp.camera.zoom*fx), baseY);
         //shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY + 64/TileNavApp.camera.zoom);
         //shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY - 64/TileNavApp.camera.zoom);
         shapeRenderer.end();
