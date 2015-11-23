@@ -28,4 +28,187 @@ public class CellCoordinatesCalculatorTest {
         assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().cellCoords(1, -1, 44, 54));
         assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().cellCoords(2, -1, 27, 60));
     }
+
+
+    @Test
+    public void testCellCoordsWithAllParams() {
+        //float viewportWidth, float viewportHeight,
+        //float screenWidth, float screenHeight,
+        //float cameraX, float cameraY, float zoom,
+        //float inputX, float inputY
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                14, 417
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                75, 426
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                138, 422
+        ));
+        assertEquals(new Pair<>(0, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                217, 442
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                246, 417
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                14, 417
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                186, 386
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                130, 357
+        ));
+
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                162, 361
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                237, 394
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                280, 394
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                329, 354
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                302, 315
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                258, 296
+        ));
+
+        assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                275, 416
+        ));
+        assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                373, 380
+        ));
+        assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                332, 390
+        ));
+        assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 640, 480,
+                320.0f, 240.0f, 1.0f,
+                455, 420
+        ));
+
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                390, 437
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                419, 457
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                452, 436
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                422, 419
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                443, 411
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                469, 433
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                505, 414
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                473, 396
+        ));
+        assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                503, 437
+        ));
+        assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                320.0f, 240.0f, 4.0f,
+                537, 445
+        ));
+
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                704.0f, 240.0f, 4.0f,
+                236, 437
+        ));
+        assertEquals(new Pair<>(0, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                704.0f, 240.0f, 4.0f,
+                267, 452
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                704.0f, 240.0f, 4.0f,
+                323, 429
+        ));
+        assertEquals(new Pair<>(1, 0), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                704.0f, 240.0f, 4.0f,
+                328, 397
+        ));
+        assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                704.0f, 240.0f, 4.0f,
+                406, 438
+        ));
+        assertEquals(new Pair<>(1, 1), new CellCoordinatesCalculator().findCellCoords(
+                640.0f, 480.f, 988, 740,
+                704.0f, 240.0f, 4.0f,
+                370, 457
+        ));
+    }
 }

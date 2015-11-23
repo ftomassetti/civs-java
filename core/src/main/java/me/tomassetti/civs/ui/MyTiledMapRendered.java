@@ -410,7 +410,11 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         float fy = TileNavApp.camera.viewportHeight/Gdx.graphics.getHeight();
         float x = TileNavApp.camera.position.x + (Gdx.input.getX() * fx - TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom;
         float y = TileNavApp.camera.position.y + (TileNavApp.camera.viewportHeight/2 - Gdx.input.getY() * fy) * TileNavApp.camera.zoom;
-        Pair<Integer, Integer> cellCoords = findCellCoords(x, y);
+        Pair<Integer, Integer> cellCoords = new CellCoordinatesCalculator().findCellCoords(
+                TileNavApp.camera.viewportWidth, TileNavApp.camera.viewportHeight,
+                Gdx.graphics.getWidth(), Gdx.graphics.getHeight(),
+                TileNavApp.camera.position.x, TileNavApp.camera.position.y, TileNavApp.camera.zoom,
+                Gdx.input.getX(), Gdx.input.getY());
         selectedTile = Optional.of(cellCoords);
         SpriteBatch huiBatch = new SpriteBatch();
         BitmapFont huiFont = new BitmapFont();
@@ -418,35 +422,51 @@ public class MyTiledMapRendered extends BatchTiledMapRenderer {
         huiFont.getData().setScale(1.0f, 1.0f);
 
         huiBatch.begin();
+        huiFont.draw(huiBatch, ("VIEWPORT WIDTH="+TileNavApp.camera.viewportWidth+", HEIGHT="+TileNavApp.camera.viewportHeight), 30, Gdx.graphics.getHeight() - 10);
+        huiFont.draw(huiBatch, ("CAMERA X="+TileNavApp.camera.position.x+", Y="+TileNavApp.camera.position.y + ", ZOOM="+TileNavApp.camera.zoom), 30, Gdx.graphics.getHeight() - 35);
+        huiFont.draw(huiBatch, ("SCREEN WIDTH="+Gdx.graphics.getWidth()+", HEIGHT="+Gdx.graphics.getHeight()), 30, Gdx.graphics.getHeight() - 60);
+        huiFont.draw(huiBatch, ("INPUT X="+Gdx.input.getX()+", Y="+Gdx.input.getY()), 30, Gdx.graphics.getHeight() - 90);
         //huiFont.draw(huiBatch, ("X="+normalizedX+", Y="+normalizedY), 30, Gdx.graphics.getHeight() - 10);
         //huiFont.draw(huiBatch, ("RESTX="+restX+", RESTY="+restY), 30, Gdx.graphics.getHeight() - 35);
-        huiFont.draw(huiBatch, ("ROW="+cellCoords.getFirst()+", COL="+cellCoords.getSecond()), 30, Gdx.graphics.getHeight() - 60);
+        huiFont.draw(huiBatch, ("ROW="+cellCoords.getFirst()+", COL="+cellCoords.getSecond()), 30, Gdx.graphics.getHeight() - 120);
         //huiFont.draw(huiBatch, "BANDS " + Simulation.INSTANCE.nBandsAlive(), 180, 30);
         //huiFont.draw(huiBatch, "POP " + Simulation.INSTANCE.totalPopulation(), 330, 30);
         huiBatch.end();
 
-        float baseX = - TileNavApp.camera.position.x / TileNavApp.camera.zoom + (TileNavApp.camera.viewportWidth/2);/*+ (cellCoords.getSecond() * fx + TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom*/;
-        float baseY = - (TileNavApp.camera.position.y - 64) / TileNavApp.camera.zoom + TileNavApp.camera.viewportHeight/2;
-        baseX += 128/TileNavApp.camera.zoom * (cellCoords.getSecond() + cellCoords.getFirst());
-        baseY += 64/TileNavApp.camera.zoom * (-cellCoords.getSecond() + cellCoords.getFirst());
+        float baseX = - TileNavApp.camera.position.x / (TileNavApp.camera.zoom) + (TileNavApp.camera.viewportWidth/2);/*+ (cellCoords.getSecond() * fx + TileNavApp.camera.viewportWidth/2) * TileNavApp.camera.zoom*/;
+        float baseY = - (TileNavApp.camera.position.y - 64) / (TileNavApp.camera.zoom) + TileNavApp.camera.viewportHeight/2;
+        baseX += 128/(TileNavApp.camera.zoom) * (cellCoords.getSecond() + cellCoords.getFirst());
+        baseY += 64/(TileNavApp.camera.zoom) * (-cellCoords.getSecond() + cellCoords.getFirst());
         //baseX = fx;
         ShapeRenderer shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
         shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY + 64/TileNavApp.camera.zoom);
-        shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY - 64/TileNavApp.camera.zoom);
-        shapeRenderer.line(0 + baseX + 128/TileNavApp.camera.zoom, 0 + baseY - 64/TileNavApp.camera.zoom, baseX + 256/TileNavApp.camera.zoom, baseY);
-        shapeRenderer.line(0 + baseX + 128/TileNavApp.camera.zoom, 0 + baseY + 64/TileNavApp.camera.zoom, baseX + 256/TileNavApp.camera.zoom, baseY);
+        shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128.0f/(TileNavApp.camera.zoom*fx), baseY + 64.0f/(TileNavApp.camera.zoom*fy));
+        shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128.0f/(TileNavApp.camera.zoom*fx), baseY - 64.0f/(TileNavApp.camera.zoom*fy));
+        shapeRenderer.line(0 + baseX + 128.0f/(TileNavApp.camera.zoom*fx), 0 + baseY - 64.0f/(TileNavApp.camera.zoom*fy), baseX + 256.0f/(TileNavApp.camera.zoom*fx), baseY);
+        shapeRenderer.line(0 + baseX + 128.0f/(TileNavApp.camera.zoom*fx), 0 + baseY + 64.0f/(TileNavApp.camera.zoom*fy), baseX + 256.0f/(TileNavApp.camera.zoom*fx), baseY);
         //shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY + 64/TileNavApp.camera.zoom);
         //shapeRenderer.line(0 + baseX, 0 + baseY, baseX + 128/TileNavApp.camera.zoom, baseY - 64/TileNavApp.camera.zoom);
         shapeRenderer.end();
 
+        System.out.println("FX " + fx);
 
         //System.out.println("X="+normalizedX+", Y="+normalizedY);
         //System.out.println("RESTX="+restX+", RESTY="+restY);
         //System.out.println("ROW="+row+", COL="+col);
         //System.out.println("VIEWPORT WIDTH " + TileNavApp.camera.viewportWidth);
+    }
+
+    private Pair<Integer, Integer> findCellCoords(float viewportWidth, float viewportHeight,
+                                                  float screenWidth, float screenHeight,
+                                                  float cameraX, float cameraY, float zoom,
+                                                  float inputX, float inputY) {
+        float fx = viewportWidth/screenWidth;
+        float fy = viewportHeight/screenHeight;
+        float xa = cameraX + (inputX * fx - viewportWidth/2) * zoom;
+        float ya = cameraY + (viewportHeight/2 - inputY * fy) * zoom;
+        return findCellCoords(xa, ya);
     }
 
 
